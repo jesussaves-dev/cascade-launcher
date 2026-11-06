@@ -1,23 +1,17 @@
 package dev.tom.cascade.ui
 
 import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.combinedClickable
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -36,7 +30,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.ImageBitmap
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.safeDrawing
@@ -48,6 +41,7 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
 import androidx.compose.ui.input.nestedscroll.NestedScrollSource
 import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalDensity
 import dev.tom.cascade.model.AppEntry
 import dev.tom.cascade.util.AppSection
@@ -151,22 +145,13 @@ fun HomeScreen(
             }
         }
 
-        if (favorites.isNotEmpty()) {
-            LazyRow(
-                contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
-                horizontalArrangement = Arrangement.spacedBy(12.dp),
-            ) {
-                items(favorites, key = { it.key }) { app ->
-                    FavoriteItem(
-                        app = app,
-                        icon = remember(app.key, iconSizeDp) { iconFor(app) },
-                        iconSizeDp = 56,
-                        onClick = { onLaunch(app) },
-                        onLongClick = { onLongPress(app) },
-                    )
-                }
-            }
-        }
+        FavoriteGrid(
+            favorites = favorites,
+            wide = LocalConfiguration.current.screenWidthDp >= 600,
+            iconFor = iconFor,
+            onLaunch = onLaunch,
+            onLongPress = onLongPress,
+        )
 
         if (sections.isEmpty() && favorites.isEmpty()) {
             Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
@@ -201,43 +186,4 @@ fun HomeScreen(
     }
 }
 
-@OptIn(ExperimentalFoundationApi::class)
-@Composable
-private fun FavoriteItem(
-    app: AppEntry,
-    icon: ImageBitmap?,
-    iconSizeDp: Int,
-    onClick: () -> Unit,
-    onLongClick: () -> Unit,
-) {
-    Column(
-        modifier = Modifier
-            .width(72.dp)
-            .combinedClickable(onClick = onClick, onLongClick = onLongClick),
-        horizontalAlignment = Alignment.CenterHorizontally,
-    ) {
-        if (icon != null) {
-            Image(
-                bitmap = icon,
-                contentDescription = null,
-                modifier = Modifier
-                    .size(iconSizeDp.dp)
-                    .clip(RoundedCornerShape(16.dp)),
-            )
-        } else {
-            Box(
-                modifier = Modifier
-                    .size(iconSizeDp.dp)
-                    .clip(RoundedCornerShape(16.dp))
-                    .background(MaterialTheme.colorScheme.surfaceVariant),
-            )
-        }
-        Spacer(Modifier.padding(top = 4.dp))
-        Text(
-            text = app.label,
-            style = MaterialTheme.typography.labelMedium,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
-        )
-    }
-}
+

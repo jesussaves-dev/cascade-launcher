@@ -5,6 +5,7 @@ import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
 import android.provider.Settings
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
@@ -21,6 +22,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import dev.tom.cascade.CascadeApp
 import dev.tom.cascade.model.AppEntry
 import dev.tom.cascade.ui.theme.CascadeTheme
+import dev.tom.cascade.util.canFavorite
 import dev.tom.cascade.util.favoriteApps
 import dev.tom.cascade.util.isDefaultLauncher
 import dev.tom.cascade.util.openDefaultLauncherSettings
@@ -65,6 +67,9 @@ class HomeActivity : ComponentActivity() {
             }
             val visibleApps = remember(allApps, hidden) {
                 allApps.filterNot { it.key in hidden }
+            }
+            val installedFavoriteCount = remember(allApps, favoriteKeys) {
+                allApps.count { it.key in favoriteKeys }
             }
 
             CascadeTheme(mode = theme, accentIndex = accent) {
@@ -123,7 +128,15 @@ class HomeActivity : ComponentActivity() {
                         pinned = app.key in favoriteKeys,
                         removable = repo.isRemovable(app),
                         onPinToggle = {
-                            prefs.toggleFavorite(app.key)
+                            if (canFavorite(favoriteKeys, app.key, installedFavoriteCount)) {
+                                prefs.toggleFavorite(app.key)
+                            } else {
+                                Toast.makeText(
+                                    this@HomeActivity,
+                                    "Favourites are full — unpin one first",
+                                    Toast.LENGTH_SHORT,
+                                ).show()
+                            }
                             selected = null
                         },
                         onAppInfo = {
