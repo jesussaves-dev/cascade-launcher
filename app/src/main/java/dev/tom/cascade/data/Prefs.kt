@@ -70,6 +70,9 @@ class Prefs(context: Context) {
     )
     val iconOverrides: StateFlow<Map<String, String>> = _iconOverrides.asStateFlow()
 
+    private val _widgetIds = MutableStateFlow(WidgetIds.decode(prefs.getString(KEY_WIDGET_IDS, null)))
+    val widgetIds: StateFlow<List<Int>> = _widgetIds.asStateFlow()
+
     fun toggleFavorite(key: String) {
         val next = _favorites.value.toMutableList()
         if (!next.remove(key)) next.add(key)
@@ -168,6 +171,19 @@ class Prefs(context: Context) {
         prefs.edit().putString(KEY_ICON_PACK, packageName.orEmpty()).apply()
     }
 
+    fun setWidgetIds(ids: List<Int>) {
+        _widgetIds.value = ids
+        prefs.edit().putString(KEY_WIDGET_IDS, WidgetIds.encode(ids)).apply()
+    }
+
+    fun addWidgetId(id: Int) {
+        if (id !in _widgetIds.value) setWidgetIds(_widgetIds.value + id)
+    }
+
+    fun removeWidgetId(id: Int) {
+        setWidgetIds(_widgetIds.value - id)
+    }
+
     fun setIconOverride(appKey: String, drawable: String) {
         writeIconOverrides(_iconOverrides.value + (appKey to drawable))
     }
@@ -201,5 +217,6 @@ class Prefs(context: Context) {
         private const val KEY_FOLDERS = "folders"
         private const val KEY_ICON_PACK = "icon_pack"
         private const val KEY_ICON_OVERRIDES = "icon_overrides"
+        private const val KEY_WIDGET_IDS = "widget_ids"
     }
 }
