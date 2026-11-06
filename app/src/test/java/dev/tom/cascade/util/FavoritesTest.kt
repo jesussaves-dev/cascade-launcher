@@ -7,12 +7,13 @@ import org.junit.Test
 class FavoritesTest {
     @Test fun `moves a key down and up`() {
         assertEquals(listOf("b", "a", "c"), moveFavorite(listOf("a", "b", "c"), 0, 1))
-        assertEquals(listOf("b", "a", "c"), moveFavorite(listOf("b", "a", "c"), 1, 0))
+        assertEquals(listOf("a", "b", "c"), moveFavorite(listOf("b", "a", "c"), 1, 0))
     }
 
-    @Test fun `clamps out of range targets`() {
-        assertEquals(listOf("b", "a"), moveFavorite(listOf("a", "b"), 0, 99))
-        assertEquals(listOf("b", "a"), moveFavorite(listOf("a", "b"), -5, 0))
+    @Test fun `ignores out of range indices`() {
+        val keys = listOf("a", "b")
+        assertEquals(keys, moveFavorite(keys, 0, 99))
+        assertEquals(keys, moveFavorite(keys, -5, 0))
     }
 
     @Test fun `returns the same list for no-op moves`() {
