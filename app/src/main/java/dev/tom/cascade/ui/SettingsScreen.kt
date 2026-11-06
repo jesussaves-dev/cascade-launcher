@@ -499,7 +499,7 @@ private fun CityDialog(
                 }
                 if (results.isNotEmpty()) {
                     LazyColumn(Modifier.heightIn(max = 260.dp)) {
-                        items(results, key = { "${it.name}|${it.latitude}" }) { place ->
+                        items(results, key = { it }) { place ->
                             Text(
                                 text = place.name,
                                 modifier = Modifier

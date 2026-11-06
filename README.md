@@ -107,8 +107,9 @@ Settings → **Header** adds two optional things to the date line:
 
 - **Show weather** — pick a city once, and the current temperature and a small
   weather glyph sit at the right of the date. Data comes from Open-Meteo; the
-  reading is refreshed at most every 30 minutes, cached on the device, and
-  hidden if the request fails. Celsius, or Fahrenheit where the system locale
+  reading is refreshed at most every 30 minutes and cached on the device for up
+  to a day; with no network the last reading stays, and without one the weather
+  is simply absent. Celsius, or Fahrenheit where the system locale
   uses it. No location permission is requested.
 - **Show a daily Bible verse** — King James Version text under the date, one
   verse per day, off by default. The verses are bundled in the app and need no

@@ -38,8 +38,6 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import dev.tom.cascade.CascadeApp
 import dev.tom.cascade.data.ButtonAction
 import dev.tom.cascade.data.WeatherRepository
-import dev.tom.cascade.data.kjvVerses
-import dev.tom.cascade.util.verseForDay
 import dev.tom.cascade.util.isFahrenheitLocale
 import dev.tom.cascade.data.ContactsRepository
 import dev.tom.cascade.model.AppEntry
@@ -55,7 +53,6 @@ import dev.tom.cascade.util.openDefaultLauncherSettings
 import dev.tom.cascade.util.openNotificationListenerSettings
 import dev.tom.cascade.util.sections
 import java.text.Collator
-import java.time.LocalDate
 import java.util.Locale
 
 class HomeActivity : ComponentActivity() {
@@ -120,13 +117,12 @@ class HomeActivity : ComponentActivity() {
             val cachedWeather by prefs.cachedWeather.collectAsStateWithLifecycle()
             val showVerse by prefs.showVerse.collectAsStateWithLifecycle()
             val weatherRepository = remember { WeatherRepository(prefs) }
-            LaunchedEffect(showWeather, place) {
+            var weatherTick by remember { mutableIntStateOf(0) }
+            LaunchedEffect(showWeather, place, weatherTick) {
                 val target = place
                 if (showWeather && target != null) weatherRepository.refreshIfStale(target)
             }
-            val dailyVerse = remember(showVerse) {
-                if (showVerse) verseForDay(LocalDate.now().toEpochDay(), kjvVerses) else null
-            }
+
             val widgetManager = remember { AppWidgetManager.getInstance(this@HomeActivity) }
             var widgetRefresh by remember { mutableIntStateOf(0) }
             val removeWidget: (Int) -> Unit = { id ->
@@ -198,6 +194,7 @@ class HomeActivity : ComponentActivity() {
                     .filter { widgetManager.getAppWidgetInfo(it) == null }
                     .forEach(removeWidget)
                 widgetRefresh++
+                weatherTick++
                 contactsGranted = hasContactsPermission()
                 if (prefs.searchContacts.value && contactsGranted) {
                     contactsRepo.refresh()
@@ -351,7 +348,7 @@ class HomeActivity : ComponentActivity() {
                                 showWeather && System.currentTimeMillis() - it.updatedAtMillis < 24 * 60 * 60_000
                             },
                             showWeather = showWeather,
-                            verse = dailyVerse,
+                            showVerse = showVerse,
                             fahrenheit = isFahrenheitLocale(Locale.getDefault()),
                             listState = listState,
                         )

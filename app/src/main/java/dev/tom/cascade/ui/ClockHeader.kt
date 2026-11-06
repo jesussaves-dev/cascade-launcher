@@ -24,11 +24,12 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleEventEffect
 import dev.tom.cascade.data.glyphFor
-import dev.tom.cascade.model.Verse
 import dev.tom.cascade.model.Weather
 import dev.tom.cascade.util.formatClockDate
+import dev.tom.cascade.data.kjvVerses
 import dev.tom.cascade.util.formatClockTime
 import dev.tom.cascade.util.formatTemperature
+import dev.tom.cascade.util.verseForDay
 import kotlinx.coroutines.delay
 import java.time.Instant
 import java.time.ZoneId
@@ -37,7 +38,7 @@ import java.time.ZoneId
 fun ClockHeader(
     weather: Weather? = null,
     showWeather: Boolean = false,
-    verse: Verse? = null,
+    showVerse: Boolean = false,
     fahrenheit: Boolean = false,
     modifier: Modifier = Modifier,
 ) {
@@ -54,6 +55,11 @@ fun ClockHeader(
     // delay() resumes late after deep sleep; a resume always re-reads the wall clock.
     LifecycleEventEffect(Lifecycle.Event.ON_RESUME) { now = System.currentTimeMillis() }
     val compact = LocalConfiguration.current.screenHeightDp < 600
+    val verse = if (!compact && showVerse) {
+        verseForDay(local.toLocalDate().toEpochDay(), kjvVerses)
+    } else {
+        null
+    }
     Column(
         modifier = modifier
             .fillMaxWidth()

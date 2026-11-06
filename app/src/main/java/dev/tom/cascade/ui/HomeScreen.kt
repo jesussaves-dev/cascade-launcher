@@ -49,7 +49,6 @@ import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalDensity
 import dev.tom.cascade.model.AppEntry
 import dev.tom.cascade.model.Folder
-import dev.tom.cascade.model.Verse
 import dev.tom.cascade.model.Weather
 import dev.tom.cascade.util.AppSection
 import dev.tom.cascade.util.HomeEntry
@@ -82,7 +81,7 @@ fun HomeScreen(
     widgets: @Composable () -> Unit = {},
     weather: Weather? = null,
     showWeather: Boolean = false,
-    verse: Verse? = null,
+    showVerse: Boolean = false,
     fahrenheit: Boolean = false,
     listState: LazyListState = rememberLazyListState(),
 ) {
@@ -181,7 +180,7 @@ fun HomeScreen(
         ClockHeader(
             weather = weather,
             showWeather = showWeather,
-            verse = verse,
+            showVerse = showVerse,
             fahrenheit = fahrenheit,
         )
 

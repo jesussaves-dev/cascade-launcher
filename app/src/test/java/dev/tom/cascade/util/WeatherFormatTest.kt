@@ -16,9 +16,11 @@ class WeatherFormatTest {
 
     @Test fun `only the four fahrenheit locales use fahrenheit`() {
         assertTrue(isFahrenheitLocale(Locale.US))
-        assertTrue(isFahrenheitLocale(Locale("bs", "BA")))
-        assertTrue(isFahrenheitLocale(Locale("bz", "BZ")))
-        assertTrue(isFahrenheitLocale(Locale("ky", "KG")))
+        assertTrue(isFahrenheitLocale(Locale("en", "BS")))
+        assertTrue(isFahrenheitLocale(Locale("en", "BZ")))
+        assertTrue(isFahrenheitLocale(Locale("en", "KY")))
+        assertFalse(isFahrenheitLocale(Locale("bs", "BA")))
+        assertFalse(isFahrenheitLocale(Locale("ky", "KG")))
         assertFalse(isFahrenheitLocale(Locale.UK))
         assertFalse(isFahrenheitLocale(Locale.GERMANY))
     }

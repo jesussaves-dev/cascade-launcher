@@ -25,7 +25,8 @@ class WeatherRepository(private val prefs: Prefs) {
             val url = "https://api.open-meteo.com/v1/forecast" +
                 "?latitude=${place.latitude}&longitude=${place.longitude}&current_weather=true"
             val json = fetch(url) ?: return@withContext
-            parseCurrentWeather(json, System.currentTimeMillis())?.let(prefs::setCachedWeather)
+            val weather = parseCurrentWeather(json, System.currentTimeMillis()) ?: return@withContext
+            if (prefs.place.value == place) prefs.setCachedWeather(weather)
         }
     }
 

@@ -8,7 +8,6 @@ fun formatTemperature(celsius: Int, fahrenheit: Boolean): String {
     return "$value°"
 }
 
-fun isFahrenheitLocale(locale: Locale): Boolean {
-    if (locale.country.isEmpty()) return false
-    return "${locale.language}_${locale.country}" in setOf("en_US", "bs_BA", "bz_BZ", "ky_KG")
-}
+private val fahrenheitCountries = setOf("US", "BS", "BZ", "KY")
+
+fun isFahrenheitLocale(locale: Locale): Boolean = locale.country in fahrenheitCountries
