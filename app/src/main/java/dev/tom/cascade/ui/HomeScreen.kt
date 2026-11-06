@@ -77,6 +77,8 @@ fun HomeScreen(
     showVerse: Boolean = false,
     fahrenheit: Boolean = false,
     listState: LazyListState = rememberLazyListState(),
+    onClockDoubleTap: () -> Unit = {},
+    onClockLongPress: () -> Unit = {},
 ) {
     val scope = rememberCoroutineScope()
     Box(
@@ -150,6 +152,8 @@ fun HomeScreen(
             showWeather = showWeather,
             showVerse = showVerse,
             fahrenheit = fahrenheit,
+            onDoubleTap = onClockDoubleTap,
+            onLongPress = onClockLongPress,
         )
 
         widgets()

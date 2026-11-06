@@ -48,6 +48,8 @@ import dev.tom.cascade.ui.theme.CascadeTheme
 import dev.tom.cascade.util.favoriteApps
 import dev.tom.cascade.util.folderApps
 import dev.tom.cascade.util.isDefaultLauncher
+import dev.tom.cascade.util.isDeviceAdminActive
+import dev.tom.cascade.util.lockDevice
 import dev.tom.cascade.util.isNotificationListenerEnabled
 import dev.tom.cascade.util.openDefaultLauncherSettings
 import dev.tom.cascade.util.openNotificationListenerSettings
@@ -177,6 +179,7 @@ class HomeActivity : ComponentActivity() {
             var notificationsEnabled by remember {
                 mutableStateOf(isNotificationListenerEnabled(this@HomeActivity))
             }
+            var adminActive by remember { mutableStateOf(isDeviceAdminActive(this@HomeActivity)) }
             var selected by remember { mutableStateOf<AppEntry?>(null) }
             var iconPickerFor by remember { mutableStateOf<AppEntry?>(null) }
             var openedFolder by remember { mutableStateOf<Folder?>(null) }
@@ -189,6 +192,7 @@ class HomeActivity : ComponentActivity() {
             LifecycleEventEffect(Lifecycle.Event.ON_RESUME) {
                 defaultLauncher = isDefaultLauncher(this@HomeActivity)
                 notificationsEnabled = isNotificationListenerEnabled(this@HomeActivity)
+                adminActive = isDeviceAdminActive(this@HomeActivity)
                 iconPacks.refreshPacks()
                 prefs.widgetIds.value
                     .filter { widgetManager.getAppWidgetInfo(it) == null }
@@ -351,6 +355,29 @@ class HomeActivity : ComponentActivity() {
                             showVerse = showVerse,
                             fahrenheit = isFahrenheitLocale(Locale.getDefault()),
                             listState = listState,
+                            onClockDoubleTap = {
+                                if (!lockDevice(this@HomeActivity)) {
+                                    Toast.makeText(
+                                        this@HomeActivity,
+                                        "Turn on double-tap to lock in Settings",
+                                        Toast.LENGTH_SHORT,
+                                    ).show()
+                                }
+                            },
+                            onClockLongPress = {
+                                runCatching {
+                                    startActivity(
+                                        Intent(Intent.ACTION_SET_WALLPAPER)
+                                            .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK),
+                                    )
+                                }.onFailure {
+                                    Toast.makeText(
+                                        this@HomeActivity,
+                                        "No wallpaper picker available",
+                                        Toast.LENGTH_SHORT,
+                                    ).show()
+                                }
+                            },
                         )
                     }
                 }

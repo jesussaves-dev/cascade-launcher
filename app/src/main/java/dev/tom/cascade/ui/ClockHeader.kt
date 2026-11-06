@@ -1,6 +1,7 @@
 package dev.tom.cascade.ui
 
 import android.text.format.DateFormat
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -17,6 +18,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextOverflow
@@ -40,6 +42,8 @@ fun ClockHeader(
     showWeather: Boolean = false,
     showVerse: Boolean = false,
     fahrenheit: Boolean = false,
+    onDoubleTap: () -> Unit = {},
+    onLongPress: () -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
     val context = LocalContext.current
@@ -63,6 +67,12 @@ fun ClockHeader(
     Column(
         modifier = modifier
             .fillMaxWidth()
+            .pointerInput(Unit) {
+                detectTapGestures(
+                    onDoubleTap = { onDoubleTap() },
+                    onLongPress = { onLongPress() },
+                )
+            }
             .padding(horizontal = 20.dp, vertical = if (compact) 8.dp else 16.dp),
     ) {
         Text(
