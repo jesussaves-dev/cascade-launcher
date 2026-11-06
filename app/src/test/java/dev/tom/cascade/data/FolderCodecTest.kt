@@ -23,4 +23,12 @@ class FolderCodecTest {
         assertEquals(emptyList<Folder>(), FolderCodec.decode(""))
         assertEquals(emptyList<Folder>(), FolderCodec.decode("garbage"))
     }
+
+    @Test fun `duplicate ids and app keys are dropped`() {
+        val encoded = "f1\u001FWork\u001Fx/.Main\u001Fx/.Main\u001E" +
+            "f1\u001FWork again\u001Fy/.Main"
+        val folders = FolderCodec.decode(encoded)
+        assertEquals(1, folders.size)
+        assertEquals(listOf("x/.Main"), folders.single().appKeys)
+    }
 }

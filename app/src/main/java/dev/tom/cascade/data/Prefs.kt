@@ -77,6 +77,7 @@ class Prefs(context: Context) {
     }
 
     fun addToFolder(folderId: String, appKey: String) {
+        if (_folders.value.none { it.id == folderId }) return
         writeFolders(moveApp(_folders.value, folderId, appKey))
         writeFavorites(_favorites.value - appKey)
     }

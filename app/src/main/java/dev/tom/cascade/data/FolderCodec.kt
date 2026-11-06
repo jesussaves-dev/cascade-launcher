@@ -18,8 +18,8 @@ object FolderCodec {
             val id = fields[0]
             val name = fields[1]
             if (id.isBlank() || name.isBlank()) return@mapNotNull null
-            Folder(id = id, name = name, appKeys = fields.drop(2))
-        }
+            Folder(id = id, name = name, appKeys = fields.drop(2).distinct())
+        }.distinctBy { it.id }
     }
 
 }
