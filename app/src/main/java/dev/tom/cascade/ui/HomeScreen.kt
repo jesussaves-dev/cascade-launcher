@@ -49,6 +49,8 @@ import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalDensity
 import dev.tom.cascade.model.AppEntry
 import dev.tom.cascade.model.Folder
+import dev.tom.cascade.model.Verse
+import dev.tom.cascade.model.Weather
 import dev.tom.cascade.util.AppSection
 import dev.tom.cascade.util.HomeEntry
 import dev.tom.cascade.util.activeLetter
@@ -78,6 +80,10 @@ fun HomeScreen(
     onFolderOpen: (Folder) -> Unit = {},
     onFolderLongPress: (Folder) -> Unit = {},
     widgets: @Composable () -> Unit = {},
+    weather: Weather? = null,
+    showWeather: Boolean = false,
+    verse: Verse? = null,
+    fahrenheit: Boolean = false,
     listState: LazyListState = rememberLazyListState(),
 ) {
     val openSearch by rememberUpdatedState(onOpenSearch)
@@ -172,7 +178,12 @@ fun HomeScreen(
             }
         }
 
-        ClockHeader()
+        ClockHeader(
+            weather = weather,
+            showWeather = showWeather,
+            verse = verse,
+            fahrenheit = fahrenheit,
+        )
 
         widgets()
 

@@ -41,6 +41,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -51,7 +53,9 @@ import dev.tom.cascade.data.ButtonAction
 import dev.tom.cascade.data.ThemeMode
 import dev.tom.cascade.iconpack.IconPackInfo
 import dev.tom.cascade.model.AppEntry
+import dev.tom.cascade.model.Place
 import dev.tom.cascade.ui.theme.AccentColors
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -76,6 +80,13 @@ fun SettingsScreen(
     onRemoveWidget: (Int) -> Unit,
     searchContacts: Boolean,
     onSearchContacts: (Boolean) -> Unit,
+    showWeather: Boolean,
+    place: Place?,
+    onShowWeather: (Boolean) -> Unit,
+    onPickPlace: (Place?) -> Unit,
+    showVerse: Boolean,
+    onShowVerse: (Boolean) -> Unit,
+    onSearchPlaces: suspend (String) -> List<Place>,
     onTheme: (ThemeMode) -> Unit,
     onAccent: (Int) -> Unit,
     onIconSize: (Int) -> Unit,
@@ -88,6 +99,7 @@ fun SettingsScreen(
     var editing by remember { mutableStateOf<ButtonSlot?>(null) }
     var choosingApp by remember { mutableStateOf(false) }
     var choosingPack by remember { mutableStateOf(false) }
+    var choosingCity by remember { mutableStateOf(false) }
     var query by remember { mutableStateOf("") }
 
     fun apply(action: ButtonAction) {
@@ -183,6 +195,51 @@ fun SettingsScreen(
                     modifier = Modifier.weight(1f),
                 )
                 Text("Change", color = MaterialTheme.colorScheme.primary)
+            }
+
+            HorizontalDivider(Modifier.padding(vertical = 16.dp))
+            SectionTitle("Header")
+            Row(
+                modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Column(Modifier.weight(1f)) {
+                    Text("Show weather")
+                    Text(
+                        if (place == null) "Choose a city first" else "On the date line",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+                Switch(
+                    checked = showWeather && place != null,
+                    onCheckedChange = onShowWeather,
+                    enabled = place != null,
+                )
+            }
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable { choosingCity = true }
+                    .padding(vertical = 8.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Text(place?.name ?: "Choose a city", modifier = Modifier.weight(1f))
+                Text(if (place == null) "Choose" else "Change", color = MaterialTheme.colorScheme.primary)
+            }
+            Row(
+                modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Column(Modifier.weight(1f)) {
+                    Text("Show a daily Bible verse")
+                    Text(
+                        "King James Version",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+                Switch(checked = showVerse, onCheckedChange = onShowVerse)
             }
 
             HorizontalDivider(Modifier.padding(vertical = 16.dp))
@@ -385,6 +442,85 @@ fun SettingsScreen(
             },
         )
     }
+    if (choosingCity) {
+        CityDialog(
+            hasPlace = place != null,
+            onSearch = onSearchPlaces,
+            onPick = {
+                onPickPlace(it)
+                choosingCity = false
+            },
+            onClear = {
+                onPickPlace(null)
+                choosingCity = false
+            },
+            onDismiss = { choosingCity = false },
+        )
+    }
+}
+
+@Composable
+private fun CityDialog(
+    hasPlace: Boolean,
+    onSearch: suspend (String) -> List<Place>,
+    onPick: (Place) -> Unit,
+    onClear: () -> Unit,
+    onDismiss: () -> Unit,
+) {
+    var query by rememberSaveable { mutableStateOf("") }
+    var results by remember { mutableStateOf<List<Place>>(emptyList()) }
+    var searched by remember { mutableStateOf(false) }
+    var busy by remember { mutableStateOf(false) }
+    val scope = rememberCoroutineScope()
+    fun runSearch() {
+        val name = query.trim()
+        if (name.isEmpty()) return
+        busy = true
+        scope.launch {
+            results = onSearch(name)
+            searched = true
+            busy = false
+        }
+    }
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Weather city") },
+        text = {
+            Column {
+                OutlinedTextField(
+                    value = query,
+                    onValueChange = { query = it },
+                    singleLine = true,
+                    label = { Text("City") },
+                    modifier = Modifier.fillMaxWidth(),
+                )
+                TextButton(onClick = ::runSearch, enabled = query.isNotBlank() && !busy) {
+                    Text(if (busy) "Searching…" else "Search")
+                }
+                if (results.isNotEmpty()) {
+                    LazyColumn(Modifier.heightIn(max = 260.dp)) {
+                        items(results, key = { "${it.name}|${it.latitude}" }) { place ->
+                            Text(
+                                text = place.name,
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clickable { onPick(place) }
+                                    .padding(vertical = 10.dp),
+                            )
+                        }
+                    }
+                } else if (searched && !busy) {
+                    Text("No places found", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                }
+            }
+        },
+        confirmButton = { TextButton(onClick = onDismiss) { Text("Close") } },
+        dismissButton = if (hasPlace) {
+            { TextButton(onClick = onClear) { Text("Clear") } }
+        } else {
+            null
+        },
+    )
 }
 
 private enum class ButtonSlot { Tap, Swipe }

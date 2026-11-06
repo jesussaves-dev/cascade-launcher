@@ -37,6 +37,10 @@ import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import dev.tom.cascade.CascadeApp
 import dev.tom.cascade.data.ButtonAction
+import dev.tom.cascade.data.WeatherRepository
+import dev.tom.cascade.data.kjvVerses
+import dev.tom.cascade.util.verseForDay
+import dev.tom.cascade.util.isFahrenheitLocale
 import dev.tom.cascade.data.ContactsRepository
 import dev.tom.cascade.model.AppEntry
 import dev.tom.cascade.model.Folder
@@ -51,6 +55,8 @@ import dev.tom.cascade.util.openDefaultLauncherSettings
 import dev.tom.cascade.util.openNotificationListenerSettings
 import dev.tom.cascade.util.sections
 import java.text.Collator
+import java.time.LocalDate
+import java.util.Locale
 
 class HomeActivity : ComponentActivity() {
     private lateinit var widgetHost: AppWidgetHost
@@ -109,6 +115,18 @@ class HomeActivity : ComponentActivity() {
             val byPackage by NotificationStore.byPackage.collectAsStateWithLifecycle()
             val widgetIds by prefs.widgetIds.collectAsStateWithLifecycle()
             val searchContacts by prefs.searchContacts.collectAsStateWithLifecycle()
+            val showWeather by prefs.showWeather.collectAsStateWithLifecycle()
+            val place by prefs.place.collectAsStateWithLifecycle()
+            val cachedWeather by prefs.cachedWeather.collectAsStateWithLifecycle()
+            val showVerse by prefs.showVerse.collectAsStateWithLifecycle()
+            val weatherRepository = remember { WeatherRepository(prefs) }
+            LaunchedEffect(showWeather, place) {
+                val target = place
+                if (showWeather && target != null) weatherRepository.refreshIfStale(target)
+            }
+            val dailyVerse = remember(showVerse) {
+                if (showVerse) verseForDay(LocalDate.now().toEpochDay(), kjvVerses) else null
+            }
             val widgetManager = remember { AppWidgetManager.getInstance(this@HomeActivity) }
             var widgetRefresh by remember { mutableIntStateOf(0) }
             val removeWidget: (Int) -> Unit = { id ->
@@ -253,6 +271,17 @@ class HomeActivity : ComponentActivity() {
                                     requestContacts.launch(Manifest.permission.READ_CONTACTS)
                                 }
                             },
+                            showWeather = showWeather,
+                            place = place,
+                            onShowWeather = prefs::setShowWeather,
+                            onPickPlace = { picked ->
+                                prefs.setPlace(picked)
+                                prefs.setCachedWeather(null)
+                                prefs.setShowWeather(picked != null)
+                            },
+                            showVerse = showVerse,
+                            onShowVerse = prefs::setShowVerse,
+                            onSearchPlaces = weatherRepository::searchPlaces,
                             onTheme = prefs::setTheme,
                             onAccent = prefs::setAccent,
                             onIconSize = prefs::setIconSize,
@@ -318,6 +347,10 @@ class HomeActivity : ComponentActivity() {
                             onFolderOpen = { openedFolder = it },
                             onFolderLongPress = { folderAction = it },
                             widgets = { WidgetArea(widgetHost, widgetIds, removeWidget) },
+                            weather = if (showWeather) cachedWeather else null,
+                            showWeather = showWeather,
+                            verse = dailyVerse,
+                            fahrenheit = isFahrenheitLocale(Locale.getDefault()),
                             listState = listState,
                         )
                     }
