@@ -3,6 +3,8 @@ package dev.tom.cascade.data
 import android.content.Context
 import dev.tom.cascade.iconpack.IconOverrideCodec
 import dev.tom.cascade.model.Folder
+import dev.tom.cascade.model.Place
+import dev.tom.cascade.model.Weather
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -210,6 +212,46 @@ class Prefs(context: Context) {
         prefs.edit().putBoolean(KEY_SEARCH_CONTACTS, enabled).apply()
     }
 
+    private val _showWeather = MutableStateFlow(prefs.getBoolean(KEY_SHOW_WEATHER, false))
+    val showWeather: StateFlow<Boolean> = _showWeather.asStateFlow()
+
+    private val _place = MutableStateFlow(
+        PrefsCodec.decodePlace(prefs.getString(KEY_WEATHER_PLACE, null))
+    )
+    val place: StateFlow<Place?> = _place.asStateFlow()
+
+    private val _cachedWeather = MutableStateFlow(
+        PrefsCodec.decodeWeather(prefs.getString(KEY_WEATHER_CACHE, null))
+    )
+    val cachedWeather: StateFlow<Weather?> = _cachedWeather.asStateFlow()
+
+    private val _showVerse = MutableStateFlow(prefs.getBoolean(KEY_SHOW_VERSE, false))
+    val showVerse: StateFlow<Boolean> = _showVerse.asStateFlow()
+
+    fun setShowWeather(enabled: Boolean) {
+        _showWeather.value = enabled
+        prefs.edit().putBoolean(KEY_SHOW_WEATHER, enabled).apply()
+    }
+
+    fun setPlace(place: Place?) {
+        _place.value = place
+        prefs.edit().apply {
+            if (place == null) remove(KEY_WEATHER_PLACE) else putString(KEY_WEATHER_PLACE, PrefsCodec.encodePlace(place))
+        }.apply()
+    }
+
+    fun setCachedWeather(weather: Weather?) {
+        _cachedWeather.value = weather
+        prefs.edit().apply {
+            if (weather == null) remove(KEY_WEATHER_CACHE) else putString(KEY_WEATHER_CACHE, PrefsCodec.encodeWeather(weather))
+        }.apply()
+    }
+
+    fun setShowVerse(enabled: Boolean) {
+        _showVerse.value = enabled
+        prefs.edit().putBoolean(KEY_SHOW_VERSE, enabled).apply()
+    }
+
     companion object {
         const val PREFS_NAME = "cascade"
         const val DEFAULT_ICON_SIZE_DP = 40
@@ -227,5 +269,9 @@ class Prefs(context: Context) {
         private const val KEY_ICON_PACK = "icon_pack"
         private const val KEY_ICON_OVERRIDES = "icon_overrides"
         private const val KEY_WIDGET_IDS = "widget_ids"
+        private const val KEY_SHOW_WEATHER = "show_weather"
+        private const val KEY_WEATHER_PLACE = "weather_place"
+        private const val KEY_WEATHER_CACHE = "weather_cache"
+        private const val KEY_SHOW_VERSE = "show_verse"
     }
 }
