@@ -1,6 +1,7 @@
 package dev.tom.cascade.data
 
 import android.content.Context
+import dev.tom.cascade.iconpack.IconOverrideCodec
 import dev.tom.cascade.model.Folder
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -63,6 +64,11 @@ class Prefs(context: Context) {
         prefs.getString(KEY_ICON_PACK, null)?.takeIf { it.isNotEmpty() }
     )
     val iconPack: StateFlow<String?> = _iconPack.asStateFlow()
+
+    private val _iconOverrides = MutableStateFlow(
+        IconOverrideCodec.decode(prefs.getString(KEY_ICON_OVERRIDES, null))
+    )
+    val iconOverrides: StateFlow<Map<String, String>> = _iconOverrides.asStateFlow()
 
     fun toggleFavorite(key: String) {
         val next = _favorites.value.toMutableList()
@@ -162,6 +168,19 @@ class Prefs(context: Context) {
         prefs.edit().putString(KEY_ICON_PACK, packageName.orEmpty()).apply()
     }
 
+    fun setIconOverride(appKey: String, drawable: String) {
+        writeIconOverrides(_iconOverrides.value + (appKey to drawable))
+    }
+
+    fun clearIconOverride(appKey: String) {
+        writeIconOverrides(_iconOverrides.value - appKey)
+    }
+
+    private fun writeIconOverrides(next: Map<String, String>) {
+        _iconOverrides.value = next
+        prefs.edit().putString(KEY_ICON_OVERRIDES, IconOverrideCodec.encode(next)).apply()
+    }
+
     fun setShowNotificationPreviews(enabled: Boolean) {
         _showNotificationPreviews.value = enabled
         prefs.edit().putBoolean(KEY_SHOW_NOTIFICATION_PREVIEWS, enabled).apply()
@@ -181,5 +200,6 @@ class Prefs(context: Context) {
         private const val KEY_SHOW_NOTIFICATION_PREVIEWS = "show_notification_previews"
         private const val KEY_FOLDERS = "folders"
         private const val KEY_ICON_PACK = "icon_pack"
+        private const val KEY_ICON_OVERRIDES = "icon_overrides"
     }
 }
