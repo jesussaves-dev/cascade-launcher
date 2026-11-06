@@ -27,6 +27,7 @@ any third-party launcher.
   sheet — tap to open, X to dismiss; previews can be hidden
 - Hidden app management in settings
 - Icon packs: use an installed ADW icon pack, with the system icon as fallback
+- Per-app icons: long-press any app and pick a different icon from the pack
 - Light, dark or system theme, six accent colours, adjustable icon size
 - Works as the system default launcher
 
@@ -84,6 +85,14 @@ and folder preview switches; pick **System icons** to switch back. Apps the pack
 does not cover keep their normal icon, and a missing icon falls back to a letter
 tile rather than a blank space. Packs are read only, locally, through Android's
 package APIs: no new permissions and no network access.
+
+If an app is missing from the pack, long-press it and choose **Choose icon** to
+pick any icon the pack ships. The choice applies to the list, favourites, folder
+previews and folder popups, and is remembered across restarts. **Reset to pack
+icon** in the same dialog returns the app to the pack's own icon, or to its
+normal icon when the pack has no entry. Choices are stored locally; switching
+packs leaves them stored but they only apply when the pack has a drawable with
+that name.
 
 ## Project layout
 
