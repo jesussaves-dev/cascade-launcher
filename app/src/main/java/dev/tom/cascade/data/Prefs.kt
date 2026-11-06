@@ -50,6 +50,10 @@ class Prefs(context: Context) {
     )
     val buttonSwipe: StateFlow<ButtonAction> = _buttonSwipe.asStateFlow()
 
+    private val _showNotificationPreviews =
+        MutableStateFlow(prefs.getBoolean(KEY_SHOW_NOTIFICATION_PREVIEWS, true))
+    val showNotificationPreviews: StateFlow<Boolean> = _showNotificationPreviews.asStateFlow()
+
     fun toggleFavorite(key: String) {
         val next = _favorites.value.toMutableList()
         if (!next.remove(key)) next.add(key)
@@ -99,6 +103,11 @@ class Prefs(context: Context) {
         prefs.edit().putString(KEY_BUTTON_SWIPE, encodeButtonAction(action)).apply()
     }
 
+    fun setShowNotificationPreviews(enabled: Boolean) {
+        _showNotificationPreviews.value = enabled
+        prefs.edit().putBoolean(KEY_SHOW_NOTIFICATION_PREVIEWS, enabled).apply()
+    }
+
     companion object {
         const val PREFS_NAME = "cascade"
         const val DEFAULT_ICON_SIZE_DP = 40
@@ -110,5 +119,6 @@ class Prefs(context: Context) {
         private const val KEY_BANNER_DISMISSED = "banner_dismissed"
         private const val KEY_BUTTON_TAP = "button_tap"
         private const val KEY_BUTTON_SWIPE = "button_swipe"
+        private const val KEY_SHOW_NOTIFICATION_PREVIEWS = "show_notification_previews"
     }
 }
