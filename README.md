@@ -18,6 +18,9 @@ any third-party launcher.
   assistant, or any app you choose
 - Instant search: tap the search field, pull down past the top of the list,
   or tap the bottom button
+- Pop-up folders: long-press an app to create a folder or move it into one;
+  the folder sits in the alphabetical list with a 2×2 preview and opens a
+  4-column popup
 - Long-press actions: pin/unpin, app info, uninstall (user apps only), hide
 - Optional notification dots: a dot on apps and favourites with active
   notifications, and their titles, text and relative time in the long-press
@@ -27,7 +30,7 @@ any third-party launcher.
 - Works as the system default launcher
 
 Not included (deliberately): widgets, icon packs, notification history or
-replies, weather, AI integrations, backup, work profiles, folders, analytics.
+replies, weather, AI integrations, backup, work profiles, analytics.
 
 ## Build
 
@@ -55,6 +58,15 @@ Tests:
 Open Cascade, tap the settings gear, then **Set Cascade as default**. On some
 devices you can also use Settings → Apps → Default apps → Home app.
 
+## Folders
+
+Long-press any app and choose **Add to folder** — pick an existing folder or
+name a new one. The app leaves the A–Z list, and the folder takes its place
+alphabetically. Tap a folder for its 4-column popup; tap an app to launch it.
+Long-press an app inside the popup to remove it, or long-press the folder row
+to rename or delete it (deleting returns its apps to the list). Folders and
+their contents are stored locally in app preferences; no database, no network.
+
 ## Optional: notification dots
 
 Cascade reads notifications only through Android's notification listener.
@@ -68,7 +80,7 @@ text, leaving dots and times only. Revoke access at any time; dots disappear.
 ```
 app/src/main/java/dev/tom/cascade/
   data/          apps repository, preferences
-  model/         AppEntry
+  model/         app and folder models
   notifications/ listener, in-memory store, notification model
   ui/            Compose screens and activity
   util/          pure sorting, sectioning and search logic
