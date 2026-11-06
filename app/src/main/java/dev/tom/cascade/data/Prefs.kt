@@ -1,9 +1,11 @@
 package dev.tom.cascade.data
 
 import android.content.Context
+import dev.tom.cascade.model.Folder
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import java.util.UUID
 
 enum class ThemeMode { SYSTEM, LIGHT, DARK }
 
@@ -54,11 +56,57 @@ class Prefs(context: Context) {
         MutableStateFlow(prefs.getBoolean(KEY_SHOW_NOTIFICATION_PREVIEWS, true))
     val showNotificationPreviews: StateFlow<Boolean> = _showNotificationPreviews.asStateFlow()
 
+    private val _folders = MutableStateFlow(FolderCodec.decode(prefs.getString(KEY_FOLDERS, null)))
+    val folders: StateFlow<List<Folder>> = _folders.asStateFlow()
+
     fun toggleFavorite(key: String) {
         val next = _favorites.value.toMutableList()
         if (!next.remove(key)) next.add(key)
+        writeFavorites(next)
+    }
+
+    fun createFolder(name: String, appKey: String): Folder {
+        val folder = Folder(
+            id = UUID.randomUUID().toString(),
+            name = sanitizeFolderName(name).ifEmpty { "Folder" },
+            appKeys = emptyList(),
+        )
+        writeFolders(moveApp(_folders.value + folder, folder.id, appKey))
+        writeFavorites(_favorites.value - appKey)
+        return folder
+    }
+
+    fun addToFolder(folderId: String, appKey: String) {
+        writeFolders(moveApp(_folders.value, folderId, appKey))
+        writeFavorites(_favorites.value - appKey)
+    }
+
+    fun removeFromFolder(folderId: String, appKey: String) {
+        writeFolders(
+            _folders.value.map { folder ->
+                if (folder.id == folderId) folder.copy(appKeys = folder.appKeys - appKey) else folder
+            }
+        )
+    }
+
+    fun renameFolder(folderId: String, name: String) {
+        val clean = sanitizeFolderName(name)
+        if (clean.isEmpty()) return
+        writeFolders(_folders.value.map { if (it.id == folderId) it.copy(name = clean) else it })
+    }
+
+    fun deleteFolder(folderId: String) {
+        writeFolders(deleteFolder(_folders.value, folderId))
+    }
+
+    private fun writeFavorites(next: List<String>) {
         _favorites.value = next
         prefs.edit().putString(KEY_FAVORITES, next.joinToString("|")).apply()
+    }
+
+    private fun writeFolders(next: List<Folder>) {
+        _folders.value = next
+        prefs.edit().putString(KEY_FOLDERS, FolderCodec.encode(next)).apply()
     }
 
     fun hide(key: String) {
@@ -120,5 +168,6 @@ class Prefs(context: Context) {
         private const val KEY_BUTTON_TAP = "button_tap"
         private const val KEY_BUTTON_SWIPE = "button_swipe"
         private const val KEY_SHOW_NOTIFICATION_PREVIEWS = "show_notification_previews"
+        private const val KEY_FOLDERS = "folders"
     }
 }

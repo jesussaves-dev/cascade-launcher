@@ -7,7 +7,7 @@ object FolderCodec {
     private const val FIELD = '\u001F'
 
     fun encode(folders: List<Folder>): String = folders.joinToString(RECORD.toString()) { folder ->
-        (listOf(folder.id, sanitize(folder.name)) + folder.appKeys).joinToString(FIELD.toString())
+        (listOf(folder.id, sanitizeFolderName(folder.name)) + folder.appKeys).joinToString(FIELD.toString())
     }
 
     fun decode(value: String?): List<Folder> {
@@ -22,6 +22,7 @@ object FolderCodec {
         }
     }
 
-    private fun sanitize(name: String): String =
-        name.replace(Regex("[\\u001E\\u001F\\r\\n]"), " ").trim()
 }
+
+fun sanitizeFolderName(name: String): String =
+    name.replace(Regex("[\\u001E\\u001F\\r\\n]"), " ").trim()
