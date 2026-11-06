@@ -12,6 +12,7 @@ import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -25,6 +26,7 @@ import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import dev.tom.cascade.CascadeApp
 import dev.tom.cascade.data.ButtonAction
+import dev.tom.cascade.iconpack.IconPackRepository
 import dev.tom.cascade.model.AppEntry
 import dev.tom.cascade.model.Folder
 import dev.tom.cascade.notifications.NotificationStore
@@ -60,9 +62,14 @@ class HomeActivity : ComponentActivity() {
             val showPreviews by prefs.showNotificationPreviews.collectAsStateWithLifecycle()
             val folders by prefs.folders.collectAsStateWithLifecycle()
             val byPackage by NotificationStore.byPackage.collectAsStateWithLifecycle()
+            val iconPacks = remember { IconPackRepository(this@HomeActivity, prefs) }
+            val packs by iconPacks.packs.collectAsStateWithLifecycle()
+            val activeIconPack by iconPacks.activePack.collectAsStateWithLifecycle()
             val density = LocalDensity.current.density
             val iconPx = (iconSizeDp * density).toInt()
-            val iconFor: (AppEntry) -> androidx.compose.ui.graphics.ImageBitmap? = { repo.icon(it, iconPx) }
+            val iconFor: (AppEntry) -> androidx.compose.ui.graphics.ImageBitmap? = {
+                iconPacks.icon(it, iconPx) ?: repo.icon(it, iconPx)
+            }
 
             var searching by rememberSaveable { mutableStateOf(false) }
             var showSettings by rememberSaveable { mutableStateOf(false) }
@@ -81,6 +88,7 @@ class HomeActivity : ComponentActivity() {
             LifecycleEventEffect(Lifecycle.Event.ON_RESUME) {
                 defaultLauncher = isDefaultLauncher(this@HomeActivity)
                 notificationsEnabled = isNotificationListenerEnabled(this@HomeActivity)
+                iconPacks.refreshPacks()
             }
 
             val notifiedPackages = if (notificationsEnabled) byPackage.keys else emptySet()
@@ -112,6 +120,7 @@ class HomeActivity : ComponentActivity() {
             }
 
             CascadeTheme(mode = theme, accentIndex = accent) {
+                key(activeIconPack) {
                 when {
                     showSettings -> {
                         BackHandler { showSettings = false }
@@ -123,6 +132,10 @@ class HomeActivity : ComponentActivity() {
                             buttonTap = buttonTap,
                             buttonSwipe = buttonSwipe,
                             apps = visibleApps,
+                            iconPacks = packs,
+                            activeIconPack = activeIconPack,
+                            packIconFor = { pack -> iconPacks.packAppIcon(pack, iconPx) },
+                            onIconPack = { iconPacks.setActive(it) },
                             notificationsEnabled = notificationsEnabled,
                             showPreviews = showPreviews,
                             onShowPreviews = prefs::setShowNotificationPreviews,
@@ -318,6 +331,7 @@ class HomeActivity : ComponentActivity() {
                         },
                         onDismiss = { selected = null },
                     )
+                }
                 }
             }
         }

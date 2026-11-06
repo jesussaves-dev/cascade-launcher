@@ -46,8 +46,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.graphics.ImageBitmap
 import dev.tom.cascade.data.ButtonAction
 import dev.tom.cascade.data.ThemeMode
+import dev.tom.cascade.iconpack.IconPackInfo
 import dev.tom.cascade.model.AppEntry
 import dev.tom.cascade.ui.theme.AccentColors
 
@@ -61,6 +63,10 @@ fun SettingsScreen(
     buttonTap: ButtonAction,
     buttonSwipe: ButtonAction,
     apps: List<AppEntry>,
+    iconPacks: List<IconPackInfo>,
+    activeIconPack: String?,
+    packIconFor: (String) -> ImageBitmap?,
+    onIconPack: (String?) -> Unit,
     notificationsEnabled: Boolean,
     showPreviews: Boolean,
     onShowPreviews: (Boolean) -> Unit,
@@ -76,6 +82,7 @@ fun SettingsScreen(
 ) {
     var editing by remember { mutableStateOf<ButtonSlot?>(null) }
     var choosingApp by remember { mutableStateOf(false) }
+    var choosingPack by remember { mutableStateOf(false) }
     var query by remember { mutableStateOf("") }
 
     fun apply(action: ButtonAction) {
@@ -156,6 +163,22 @@ fun SettingsScreen(
                 valueRange = 24f..64f,
                 steps = 9,
             )
+
+            Spacer(Modifier.height(16.dp))
+            Text("Icon pack", style = MaterialTheme.typography.bodyLarge)
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable { choosingPack = true }
+                    .padding(vertical = 8.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Text(
+                    text = iconPacks.firstOrNull { it.packageName == activeIconPack }?.label ?: "System icons",
+                    modifier = Modifier.weight(1f),
+                )
+                Text("Change", color = MaterialTheme.colorScheme.primary)
+            }
 
             HorizontalDivider(Modifier.padding(vertical = 16.dp))
             SectionTitle("Button")
@@ -284,9 +307,65 @@ fun SettingsScreen(
             },
         )
     }
+    if (choosingPack) {
+        AlertDialog(
+            onDismissRequest = { choosingPack = false },
+            title = { Text("Icon pack") },
+            text = {
+                LazyColumn(Modifier.heightIn(max = 360.dp)) {
+                    item {
+                        PackChoice(
+                            label = "System icons",
+                            icon = null,
+                            selected = activeIconPack == null,
+                            onClick = {
+                                onIconPack(null)
+                                choosingPack = false
+                            },
+                        )
+                    }
+                    items(iconPacks, key = { it.packageName }) { pack ->
+                        PackChoice(
+                            label = pack.label,
+                            icon = packIconFor(pack.packageName),
+                            selected = activeIconPack == pack.packageName,
+                            onClick = {
+                                onIconPack(pack.packageName)
+                                choosingPack = false
+                            },
+                        )
+                    }
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = { choosingPack = false }) { Text("Close") }
+            },
+        )
+    }
 }
 
 private enum class ButtonSlot { Tap, Swipe }
+
+@Composable
+private fun PackChoice(
+    label: String,
+    icon: ImageBitmap?,
+    selected: Boolean,
+    onClick: () -> Unit,
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick)
+            .padding(vertical = 8.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        AppIcon(icon = icon, label = label, sizeDp = 40)
+        Spacer(Modifier.width(12.dp))
+        Text(label, modifier = Modifier.weight(1f))
+        RadioButton(selected = selected, onClick = onClick)
+    }
+}
 
 @Composable
 private fun ButtonActionRow(title: String, value: String, onClick: () -> Unit) {
