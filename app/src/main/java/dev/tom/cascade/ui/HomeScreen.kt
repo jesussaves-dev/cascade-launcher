@@ -208,8 +208,12 @@ fun HomeScreen(
                             onMove = { steps ->
                                 // Resolve by key so fast drags never reuse a stale index.
                                 val from = favoriteOrder.indexOfFirst { it.key == app.key }
-                                if (from >= 0) {
-                                    favoriteOrder = reorderFavorites(favoriteOrder, from, from + steps)
+                                val to = (from + steps).coerceIn(0, favoriteOrder.lastIndex)
+                                if (from >= 0 && to != from) {
+                                    favoriteOrder = reorderFavorites(favoriteOrder, from, to)
+                                    true
+                                } else {
+                                    false
                                 }
                             },
                             onMoveUp = {
@@ -230,9 +234,10 @@ fun HomeScreen(
                                 draggingFavorite = null
                                 onFavoriteMoved(favoriteOrder.map { it.key })
                             },
-                            // Only the neighbours animate; animating the lifted row fights the finger.
-                            modifier = if (draggingFavorite == app.key) {
-                                Modifier.zIndex(1f)
+                            // Placement animations lag behind a fast drag, so the list snaps
+                            // while a row is lifted; only the drop is left to settle.
+                            modifier = if (draggingFavorite != null) {
+                                Modifier.zIndex(if (draggingFavorite == app.key) 1f else 0f)
                             } else {
                                 Modifier.animateItem()
                             },

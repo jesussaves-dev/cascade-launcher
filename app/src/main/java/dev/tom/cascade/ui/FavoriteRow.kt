@@ -54,7 +54,7 @@ fun FavoriteRow(
     onDragStart: () -> Unit,
     onClick: () -> Unit,
     onLongClick: () -> Unit,
-    onMove: (Int) -> Unit,
+    onMove: (Int) -> Boolean,
     onMoveUp: () -> Unit,
     onMoveDown: () -> Unit,
     onMoveEnd: () -> Unit,
@@ -128,8 +128,7 @@ fun FavoriteRow(
                             travelled += abs(dy)
                             // Swap at half a row so the list keeps up with the finger.
                             val steps = (pulled / (rowHeightPx / 2f)).roundToInt()
-                            if (steps != 0) {
-                                latestOnMove(steps)
+                            if (steps != 0 && latestOnMove(steps)) {
                                 pulled -= steps * rowHeightPx
                             }
                         }
