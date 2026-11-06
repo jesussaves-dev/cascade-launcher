@@ -36,7 +36,6 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import dev.tom.cascade.CascadeApp
-import dev.tom.cascade.data.ButtonAction
 import dev.tom.cascade.data.WeatherRepository
 import dev.tom.cascade.util.isFahrenheitLocale
 import dev.tom.cascade.data.ContactsRepository
@@ -109,8 +108,6 @@ class HomeActivity : ComponentActivity() {
             val accent by prefs.accentIndex.collectAsStateWithLifecycle()
             val iconSizeDp by prefs.iconSizeDp.collectAsStateWithLifecycle()
             val bannerDismissed by prefs.bannerDismissed.collectAsStateWithLifecycle()
-            val buttonTap by prefs.buttonTap.collectAsStateWithLifecycle()
-            val buttonSwipe by prefs.buttonSwipe.collectAsStateWithLifecycle()
             val showPreviews by prefs.showNotificationPreviews.collectAsStateWithLifecycle()
             val folders by prefs.folders.collectAsStateWithLifecycle()
             val byPackage by NotificationStore.byPackage.collectAsStateWithLifecycle()
@@ -226,19 +223,11 @@ class HomeActivity : ComponentActivity() {
                 allApps.filterNot { it.key in hidden }
             }
 
-            fun runAction(action: ButtonAction) {
-                when (action) {
-                    ButtonAction.Search -> searching = true
-                    ButtonAction.Voice -> startVoiceAssistant()
-                    is ButtonAction.OpenApp ->
-                        allApps.firstOrNull { it.key == action.key }?.let(::launchApp)
-                }
-            }
-
             val listState = androidx.compose.foundation.lazy.rememberLazyListState()
             LaunchedEffect(Unit) {
                 if (!keepScroll) listState.scrollToItem(0)
             }
+
             CascadeTheme(mode = theme, accentIndex = accent) {
                 key(activeIconPack, packVersion, iconOverrides) {
                 when {
@@ -249,9 +238,6 @@ class HomeActivity : ComponentActivity() {
                             accentIndex = accent,
                             iconSizeDp = iconSizeDp,
                             hiddenApps = allApps.filter { it.key in hidden },
-                            buttonTap = buttonTap,
-                            buttonSwipe = buttonSwipe,
-                            apps = visibleApps,
                             iconPacks = packs,
                             activeIconPack = activeIconPack,
                             packIconFor = { pack -> iconPacks.packAppIcon(pack, (40 * density).toInt()) },
@@ -294,8 +280,6 @@ class HomeActivity : ComponentActivity() {
                             onAccent = prefs::setAccent,
                             onIconSize = prefs::setIconSize,
                             onUnhide = prefs::unhide,
-                            onButtonTap = prefs::setButtonTap,
-                            onButtonSwipe = prefs::setButtonSwipe,
                             onSetDefault = { openDefaultLauncherSettings(this@HomeActivity) },
                             onBack = { showSettings = false },
                         )
@@ -304,7 +288,6 @@ class HomeActivity : ComponentActivity() {
                     searching -> {
                         BackHandler { searching = false }
                         SearchOverlay(
-                            apps = visibleApps,
                             contacts = if (searchContacts && contactsGranted) contactList else emptyList(),
                             onOpenContact = { contact ->
                                 searching = false
@@ -330,6 +313,7 @@ class HomeActivity : ComponentActivity() {
                                 searching = false
                                 launchApp(it)
                             },
+                            apps = visibleApps,
                             onDismiss = { searching = false },
                         )
                     }
@@ -347,8 +331,6 @@ class HomeActivity : ComponentActivity() {
                             onLongPress = { selected = it },
                             onOpenSearch = { searching = true },
                             onOpenSettings = { showSettings = true },
-                            onButtonTap = { runAction(buttonTap) },
-                            onButtonSwipeUp = { runAction(buttonSwipe) },
                             iconFor = iconFor,
                             iconSizeDp = iconSizeDp,
                             notifiedPackages = notifiedPackages,

@@ -49,10 +49,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.graphics.ImageBitmap
-import dev.tom.cascade.data.ButtonAction
 import dev.tom.cascade.data.ThemeMode
-import dev.tom.cascade.iconpack.IconPackInfo
 import dev.tom.cascade.model.AppEntry
+import dev.tom.cascade.iconpack.IconPackInfo
 import dev.tom.cascade.model.Place
 import dev.tom.cascade.ui.theme.AccentColors
 import kotlinx.coroutines.launch
@@ -64,9 +63,6 @@ fun SettingsScreen(
     accentIndex: Int,
     iconSizeDp: Int,
     hiddenApps: List<AppEntry>,
-    buttonTap: ButtonAction,
-    buttonSwipe: ButtonAction,
-    apps: List<AppEntry>,
     iconPacks: List<IconPackInfo>,
     activeIconPack: String?,
     packIconFor: (String) -> ImageBitmap?,
@@ -93,27 +89,11 @@ fun SettingsScreen(
     onAccent: (Int) -> Unit,
     onIconSize: (Int) -> Unit,
     onUnhide: (String) -> Unit,
-    onButtonTap: (ButtonAction) -> Unit,
-    onButtonSwipe: (ButtonAction) -> Unit,
     onSetDefault: () -> Unit,
     onBack: () -> Unit,
 ) {
-    var editing by remember { mutableStateOf<ButtonSlot?>(null) }
-    var choosingApp by remember { mutableStateOf(false) }
     var choosingPack by remember { mutableStateOf(false) }
     var choosingCity by remember { mutableStateOf(false) }
-    var query by remember { mutableStateOf("") }
-
-    fun apply(action: ButtonAction) {
-        when (editing) {
-            ButtonSlot.Tap -> onButtonTap(action)
-            ButtonSlot.Swipe -> onButtonSwipe(action)
-            null -> Unit
-        }
-        editing = null
-        choosingApp = false
-        query = ""
-    }
 
     Scaffold(
         topBar = {
@@ -264,11 +244,6 @@ fun SettingsScreen(
             }
 
             HorizontalDivider(Modifier.padding(vertical = 16.dp))
-            SectionTitle("Button")
-            ButtonActionRow("Tap", actionLabel(buttonTap, apps)) { editing = ButtonSlot.Tap }
-            ButtonActionRow("Swipe up", actionLabel(buttonSwipe, apps)) { editing = ButtonSlot.Swipe }
-
-            HorizontalDivider(Modifier.padding(vertical = 16.dp))
             SectionTitle("Default launcher")
             OutlinedButton(onClick = onSetDefault) { Text("Set Cascade as default") }
 
@@ -369,65 +344,6 @@ fun SettingsScreen(
         }
     }
 
-    if (editing != null && !choosingApp) {
-        AlertDialog(
-            onDismissRequest = { editing = null },
-            title = { Text("Button action") },
-            text = {
-                Column {
-                    ActionChoice("Search") { apply(ButtonAction.Search) }
-                    ActionChoice("Voice assistant") { apply(ButtonAction.Voice) }
-                    ActionChoice("Choose app…") { choosingApp = true }
-                }
-            },
-            confirmButton = {},
-            dismissButton = {
-                TextButton(onClick = { editing = null }) { Text("Cancel") }
-            },
-        )
-    }
-
-    if (choosingApp) {
-        val filtered = apps.filter { it.label.contains(query, ignoreCase = true) }
-        AlertDialog(
-            onDismissRequest = {
-                choosingApp = false
-                editing = null
-            },
-            title = { Text("Choose app") },
-            text = {
-                Column {
-                    OutlinedTextField(
-                        value = query,
-                        onValueChange = { query = it },
-                        singleLine = true,
-                        placeholder = { Text("Filter apps") },
-                        modifier = Modifier.fillMaxWidth(),
-                    )
-                    LazyColumn(Modifier.heightIn(max = 320.dp)) {
-                        items(filtered, key = { it.key }) { app ->
-                            Text(
-                                text = app.label,
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .clickable { apply(ButtonAction.OpenApp(app.key)) }
-                                    .padding(vertical = 12.dp),
-                            )
-                        }
-                    }
-                }
-            },
-            confirmButton = {},
-            dismissButton = {
-                TextButton(
-                    onClick = {
-                        choosingApp = false
-                        editing = null
-                    },
-                ) { Text("Cancel") }
-            },
-        )
-    }
     if (choosingPack) {
         AlertDialog(
             onDismissRequest = { choosingPack = false },
@@ -544,8 +460,6 @@ private fun CityDialog(
     )
 }
 
-private enum class ButtonSlot { Tap, Swipe }
-
 @Composable
 private fun PackChoice(
     label: String,
@@ -565,39 +479,6 @@ private fun PackChoice(
         Text(label, modifier = Modifier.weight(1f))
         RadioButton(selected = selected, onClick = onClick)
     }
-}
-
-@Composable
-private fun ButtonActionRow(title: String, value: String, onClick: () -> Unit) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable(onClick = onClick)
-            .padding(vertical = 12.dp),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        Text(title, modifier = Modifier.weight(1f))
-        Text(value, color = MaterialTheme.colorScheme.onSurfaceVariant)
-    }
-}
-
-@Composable
-private fun ActionChoice(label: String, onClick: () -> Unit) {
-    Text(
-        text = label,
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable(onClick = onClick)
-            .padding(vertical = 12.dp),
-    )
-}
-
-private fun actionLabel(action: ButtonAction, apps: List<AppEntry>): String = when (action) {
-    ButtonAction.Search -> "Search"
-    ButtonAction.Voice -> "Voice assistant"
-    is ButtonAction.OpenApp -> apps.firstOrNull { it.key == action.key }
-        ?.let { "Open ${it.label}" }
-        ?: "App not installed"
 }
 
 @Composable

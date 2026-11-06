@@ -77,8 +77,6 @@ fun HomeScreen(
     onLongPress: (AppEntry) -> Unit,
     onOpenSearch: () -> Unit,
     onOpenSettings: () -> Unit,
-    onButtonTap: () -> Unit,
-    onButtonSwipeUp: () -> Unit,
     iconFor: (AppEntry) -> ImageBitmap?,
     iconSizeDp: Int,
     notifiedPackages: Set<String> = emptySet(),
@@ -185,7 +183,7 @@ fun HomeScreen(
         } else {
             LazyColumn(
                 state = listState,
-                contentPadding = androidx.compose.foundation.layout.PaddingValues(bottom = 96.dp),
+                contentPadding = androidx.compose.foundation.layout.PaddingValues(bottom = 16.dp),
                 modifier = Modifier.fillMaxSize(),
             ) {
                 if (favorites.isNotEmpty()) {
@@ -310,13 +308,6 @@ fun HomeScreen(
             }
         }
             }
-        CascadeButton(
-            onTap = onButtonTap,
-            onSwipeUp = onButtonSwipeUp,
-            modifier = Modifier
-                .align(Alignment.BottomCenter)
-                .padding(bottom = 16.dp),
-        )
         val presentLetters = remember(sections) {
             sections.mapNotNull { railLetterFor(it.header) }.toSet()
         }

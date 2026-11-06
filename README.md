@@ -14,9 +14,7 @@ any third-party launcher.
 - Favourites: long-press any app and pin it; no limit, shown as full rows above
   the A–Z list, and dragging the handle on a row reorders them
 - Wave alphabet rail on the right: drag to jump, empty letters are dimmed
-- Configurable bottom button: tap and swipe-up each run Search, the voice
-  assistant, or any app you choose
-- Instant search: tap the search field or the bottom button
+- Instant search: tap the search field at the top
 - Optional contact search and a “search the web” row in the search overlay
 - Pop-up folders: long-press an app to create a folder or move it into one;
   the folder sits in the alphabetical list with a 2×2 preview and opens a
