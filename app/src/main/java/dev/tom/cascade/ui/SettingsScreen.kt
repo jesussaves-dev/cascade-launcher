@@ -71,6 +71,9 @@ fun SettingsScreen(
     showPreviews: Boolean,
     onShowPreviews: (Boolean) -> Unit,
     onOpenNotificationAccess: () -> Unit,
+    widgets: List<Pair<Int, String>>,
+    onAddWidget: () -> Unit,
+    onRemoveWidget: (Int) -> Unit,
     onTheme: (ThemeMode) -> Unit,
     onAccent: (Int) -> Unit,
     onIconSize: (Int) -> Unit,
@@ -218,6 +221,27 @@ fun SettingsScreen(
                     onCheckedChange = onShowPreviews,
                     enabled = notificationsEnabled,
                 )
+            }
+
+            HorizontalDivider(Modifier.padding(vertical = 16.dp))
+            SectionTitle("Widgets")
+            OutlinedButton(onClick = onAddWidget) { Text("Add widget") }
+            if (widgets.isEmpty()) {
+                Text(
+                    "No widgets",
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(vertical = 8.dp),
+                )
+            } else {
+                widgets.forEach { (id, label) ->
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Text(label, modifier = Modifier.weight(1f))
+                        TextButton(onClick = { onRemoveWidget(id) }) { Text("Remove") }
+                    }
+                }
             }
 
             HorizontalDivider(Modifier.padding(vertical = 16.dp))

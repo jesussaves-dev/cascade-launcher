@@ -91,6 +91,15 @@ class HomeActivity : ComponentActivity() {
             LaunchedEffect(widgetIds) {
                 widgetIds.filter { widgetManager.getAppWidgetInfo(it) == null }.forEach(prefs::removeWidgetId)
             }
+            val widgetEntries = remember(widgetIds) {
+                widgetIds.map { id ->
+                    val label = widgetManager.getAppWidgetInfo(id)
+                        ?.loadLabel(this@HomeActivity.packageManager)
+                        ?.toString()
+                        ?: "Widget"
+                    id to label
+                }
+            }
             val iconPacks = app.iconPacks
             val packs by iconPacks.packs.collectAsStateWithLifecycle()
             val activeIconPack by iconPacks.activePack.collectAsStateWithLifecycle()
@@ -180,6 +189,9 @@ class HomeActivity : ComponentActivity() {
                             onOpenNotificationAccess = {
                                 openNotificationListenerSettings(this@HomeActivity)
                             },
+                            widgets = widgetEntries,
+                            onAddWidget = ::addWidget,
+                            onRemoveWidget = prefs::removeWidgetId,
                             onTheme = prefs::setTheme,
                             onAccent = prefs::setAccent,
                             onIconSize = prefs::setIconSize,
