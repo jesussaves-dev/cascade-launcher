@@ -2,6 +2,14 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
     <uses-permission android:name="android.permission.REQUEST_DELETE_PACKAGES" />
 
+    <!-- LauncherApps results are package-visibility filtered on Android 11+. -->
+    <queries>
+        <intent>
+            <action android:name="android.intent.action.MAIN" />
+            <category android:name="android.intent.category.LAUNCHER" />
+        </intent>
+    </queries>
+
     <application
         android:name=".CascadeApp"
         android:label="@string/app_name"
