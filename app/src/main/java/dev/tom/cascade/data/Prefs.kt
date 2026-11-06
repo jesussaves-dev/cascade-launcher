@@ -40,6 +40,16 @@ class Prefs(context: Context) {
     private val _bannerDismissed = MutableStateFlow(prefs.getBoolean(KEY_BANNER_DISMISSED, false))
     val bannerDismissed: StateFlow<Boolean> = _bannerDismissed.asStateFlow()
 
+    private val _buttonTap = MutableStateFlow(
+        decodeButtonAction(prefs.getString(KEY_BUTTON_TAP, null), ButtonAction.Search)
+    )
+    val buttonTap: StateFlow<ButtonAction> = _buttonTap.asStateFlow()
+
+    private val _buttonSwipe = MutableStateFlow(
+        decodeButtonAction(prefs.getString(KEY_BUTTON_SWIPE, null), ButtonAction.Voice)
+    )
+    val buttonSwipe: StateFlow<ButtonAction> = _buttonSwipe.asStateFlow()
+
     fun toggleFavorite(key: String) {
         val next = _favorites.value.toMutableList()
         if (!next.remove(key)) next.add(key)
@@ -79,6 +89,16 @@ class Prefs(context: Context) {
         prefs.edit().putBoolean(KEY_BANNER_DISMISSED, true).apply()
     }
 
+    fun setButtonTap(action: ButtonAction) {
+        _buttonTap.value = action
+        prefs.edit().putString(KEY_BUTTON_TAP, encodeButtonAction(action)).apply()
+    }
+
+    fun setButtonSwipe(action: ButtonAction) {
+        _buttonSwipe.value = action
+        prefs.edit().putString(KEY_BUTTON_SWIPE, encodeButtonAction(action)).apply()
+    }
+
     companion object {
         const val PREFS_NAME = "cascade"
         const val DEFAULT_ICON_SIZE_DP = 40
@@ -88,5 +108,7 @@ class Prefs(context: Context) {
         private const val KEY_ACCENT = "accent"
         private const val KEY_ICON_SIZE = "icon_size"
         private const val KEY_BANNER_DISMISSED = "banner_dismissed"
+        private const val KEY_BUTTON_TAP = "button_tap"
+        private const val KEY_BUTTON_SWIPE = "button_swipe"
     }
 }
