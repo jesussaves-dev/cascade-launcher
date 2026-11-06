@@ -177,17 +177,6 @@ fun HomeScreen(
 
         widgets()
 
-        FavoriteGrid(
-            favorites = favorites,
-            wide = LocalConfiguration.current.let {
-                it.screenWidthDp >= 600 && it.screenHeightDp >= 600
-            },
-            notifiedPackages = notifiedPackages,
-            iconFor = iconFor,
-            onLaunch = onLaunch,
-            onLongPress = onLongPress,
-        )
-
         if (sections.isEmpty() && favorites.isEmpty()) {
             Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                 Text("No apps found", color = MaterialTheme.colorScheme.onSurfaceVariant)
@@ -200,6 +189,30 @@ fun HomeScreen(
                     .fillMaxSize()
                     .nestedScroll(pullToSearch),
             ) {
+                item(key = "favorites") {
+                    FavoriteGrid(
+                        favorites = favorites,
+                        wide = LocalConfiguration.current.let {
+                            it.screenWidthDp >= 600 && it.screenHeightDp >= 600
+                        },
+                        notifiedPackages = notifiedPackages,
+                        iconFor = iconFor,
+                        onLaunch = onLaunch,
+                        onLongPress = onLongPress,
+                    )
+                }
+                if (sections.isEmpty()) {
+                    item(key = "empty") {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 48.dp),
+                            contentAlignment = Alignment.Center,
+                        ) {
+                            Text("No apps found", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        }
+                    }
+                }
                 sections.forEach { section ->
                     stickyHeader(key = "header-${section.header}") {
                         Text(

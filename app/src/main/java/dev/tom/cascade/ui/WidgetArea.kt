@@ -10,6 +10,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
@@ -18,6 +19,7 @@ import androidx.compose.ui.viewinterop.AndroidView
 fun WidgetArea(host: AppWidgetHost, ids: List<Int>, onStale: (Int) -> Unit) {
     val context = LocalContext.current
     val manager = remember { AppWidgetManager.getInstance(context) }
+    val maxHeight = if (LocalConfiguration.current.screenHeightDp < 600) 120 else 220
     LaunchedEffect(ids) {
         ids.filter { manager.getAppWidgetInfo(it) == null }.forEach(onStale)
     }
@@ -31,7 +33,7 @@ fun WidgetArea(host: AppWidgetHost, ids: List<Int>, onStale: (Int) -> Unit) {
                     // Providers measure match_parent unless we pin their min height.
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(info.minHeight.coerceIn(48, 220).dp),
+                        .height(info.minHeight.coerceIn(48, maxHeight).dp),
                 )
             }
         }

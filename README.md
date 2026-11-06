@@ -102,10 +102,10 @@ The home screen starts with a clock: the time in the system's 12- or 24-hour
 format, today's date underneath, updated every minute.
 
 Settings → **Widgets** → **Add widget** opens the system widget picker; the
-widget appears under the clock and scrolls with the list. **Remove** takes it
-off again. Widget ids are stored locally, and a widget whose app is uninstalled
-disappears on the next launch. Widgets are not resized or reordered in this
-version.
+widget appears under the clock, above favourites. **Remove** takes it off
+again and releases its binding. Widget ids are stored locally, and a widget
+whose app is uninstalled disappears. Widgets are not resized or reordered in
+this version.
 
 ## Project layout
 

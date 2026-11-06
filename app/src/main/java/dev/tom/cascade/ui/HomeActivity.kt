@@ -18,6 +18,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -51,22 +52,37 @@ class HomeActivity : ComponentActivity() {
     private var pendingWidgetId = AppWidgetManager.INVALID_APPWIDGET_ID
 
     private val pickWidget = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
-        val id = pendingWidgetId
+        val pending = pendingWidgetId
         pendingWidgetId = AppWidgetManager.INVALID_APPWIDGET_ID
-        if (id == AppWidgetManager.INVALID_APPWIDGET_ID) return@registerForActivityResult
         val returned = result.data?.getIntExtra(
             AppWidgetManager.EXTRA_APPWIDGET_ID,
             AppWidgetManager.INVALID_APPWIDGET_ID,
         ) ?: AppWidgetManager.INVALID_APPWIDGET_ID
-        if (result.resultCode == Activity.RESULT_OK && returned == id) {
-            (application as CascadeApp).prefs.addWidgetId(id)
-        } else {
-            widgetHost.deleteAppWidgetId(id)
+        if (result.resultCode == Activity.RESULT_OK) {
+            // A recreated activity loses `pending`; the result still names the widget.
+            val id = returned.takeIf { it != AppWidgetManager.INVALID_APPWIDGET_ID } ?: pending
+            if (id != AppWidgetManager.INVALID_APPWIDGET_ID) {
+                (application as CascadeApp).prefs.addWidgetId(id)
+            }
+            if (pending != AppWidgetManager.INVALID_APPWIDGET_ID && pending != id) {
+                widgetHost.deleteAppWidgetId(pending)
+            }
+        } else if (pending != AppWidgetManager.INVALID_APPWIDGET_ID) {
+            widgetHost.deleteAppWidgetId(pending)
         }
+    }
+
+    override fun onSaveInstanceState(outState: Bundle) {
+        super.onSaveInstanceState(outState)
+        outState.putInt(STATE_PENDING_WIDGET, pendingWidgetId)
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        pendingWidgetId = savedInstanceState?.getInt(
+            STATE_PENDING_WIDGET,
+            AppWidgetManager.INVALID_APPWIDGET_ID,
+        ) ?: AppWidgetManager.INVALID_APPWIDGET_ID
         widgetHost = AppWidgetHost(this, WIDGET_HOST_ID)
         enableEdgeToEdge()
         setContent {
@@ -88,10 +104,15 @@ class HomeActivity : ComponentActivity() {
             val byPackage by NotificationStore.byPackage.collectAsStateWithLifecycle()
             val widgetIds by prefs.widgetIds.collectAsStateWithLifecycle()
             val widgetManager = remember { AppWidgetManager.getInstance(this@HomeActivity) }
-            LaunchedEffect(widgetIds) {
-                widgetIds.filter { widgetManager.getAppWidgetInfo(it) == null }.forEach(prefs::removeWidgetId)
+            var widgetRefresh by remember { mutableIntStateOf(0) }
+            val removeWidget: (Int) -> Unit = { id ->
+                widgetHost.deleteAppWidgetId(id)
+                prefs.removeWidgetId(id)
             }
-            val widgetEntries = remember(widgetIds) {
+            LaunchedEffect(widgetIds) {
+                widgetIds.filter { widgetManager.getAppWidgetInfo(it) == null }.forEach(removeWidget)
+            }
+            val widgetEntries = remember(widgetIds, widgetRefresh) {
                 widgetIds.map { id ->
                     val label = widgetManager.getAppWidgetInfo(id)
                         ?.loadLabel(this@HomeActivity.packageManager)
@@ -135,6 +156,10 @@ class HomeActivity : ComponentActivity() {
                 defaultLauncher = isDefaultLauncher(this@HomeActivity)
                 notificationsEnabled = isNotificationListenerEnabled(this@HomeActivity)
                 iconPacks.refreshPacks()
+                prefs.widgetIds.value
+                    .filter { widgetManager.getAppWidgetInfo(it) == null }
+                    .forEach(removeWidget)
+                widgetRefresh++
             }
 
             val notifiedPackages = if (notificationsEnabled) byPackage.keys else emptySet()
@@ -191,7 +216,7 @@ class HomeActivity : ComponentActivity() {
                             },
                             widgets = widgetEntries,
                             onAddWidget = ::addWidget,
-                            onRemoveWidget = prefs::removeWidgetId,
+                            onRemoveWidget = removeWidget,
                             onTheme = prefs::setTheme,
                             onAccent = prefs::setAccent,
                             onIconSize = prefs::setIconSize,
@@ -237,7 +262,7 @@ class HomeActivity : ComponentActivity() {
                             folderContents = folderContents,
                             onFolderOpen = { openedFolder = it },
                             onFolderLongPress = { folderAction = it },
-                            widgets = { WidgetArea(widgetHost, widgetIds, prefs::removeWidgetId) },
+                            widgets = { WidgetArea(widgetHost, widgetIds, removeWidget) },
                             listState = listState,
                         )
                     }
@@ -425,6 +450,7 @@ class HomeActivity : ComponentActivity() {
     }
 
     private fun addWidget() {
+        if (pendingWidgetId != AppWidgetManager.INVALID_APPWIDGET_ID) return
         val id = widgetHost.allocateAppWidgetId()
         val intent = Intent(AppWidgetManager.ACTION_APPWIDGET_PICK)
             .putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, id)
@@ -489,5 +515,6 @@ class HomeActivity : ComponentActivity() {
 
     companion object {
         private const val WIDGET_HOST_ID = 1024
+        private const val STATE_PENDING_WIDGET = "pending_widget_id"
     }
 }
