@@ -74,6 +74,8 @@ fun SettingsScreen(
     widgets: List<Pair<Int, String>>,
     onAddWidget: () -> Unit,
     onRemoveWidget: (Int) -> Unit,
+    searchContacts: Boolean,
+    onSearchContacts: (Boolean) -> Unit,
     onTheme: (ThemeMode) -> Unit,
     onAccent: (Int) -> Unit,
     onIconSize: (Int) -> Unit,
@@ -242,6 +244,23 @@ fun SettingsScreen(
                         TextButton(onClick = { onRemoveWidget(id) }) { Text("Remove") }
                     }
                 }
+            }
+
+            HorizontalDivider(Modifier.padding(vertical = 16.dp))
+            SectionTitle("Search")
+            Row(
+                modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Column(Modifier.weight(1f)) {
+                    Text("Include contacts")
+                    Text(
+                        "Names and numbers, in memory only",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+                Switch(checked = searchContacts, onCheckedChange = onSearchContacts)
             }
 
             HorizontalDivider(Modifier.padding(vertical = 16.dp))

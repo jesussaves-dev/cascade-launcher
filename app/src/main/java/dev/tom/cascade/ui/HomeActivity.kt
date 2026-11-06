@@ -1,9 +1,12 @@
 package dev.tom.cascade.ui
 
+import android.Manifest
+import android.app.Activity
+import android.app.SearchManager
 import android.content.ActivityNotFoundException
 import android.content.ComponentName
 import android.content.Intent
-import android.app.Activity
+import android.content.pm.PackageManager
 import android.appwidget.AppWidgetHost
 import android.appwidget.AppWidgetManager
 import android.net.Uri
@@ -13,6 +16,7 @@ import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
+import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.runtime.LaunchedEffect
@@ -27,11 +31,13 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.ui.platform.LocalDensity
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import dev.tom.cascade.CascadeApp
 import dev.tom.cascade.data.ButtonAction
+import dev.tom.cascade.data.ContactsRepository
 import dev.tom.cascade.model.AppEntry
 import dev.tom.cascade.model.Folder
 import dev.tom.cascade.iconpack.overrideDrawable
@@ -103,6 +109,7 @@ class HomeActivity : ComponentActivity() {
             val folders by prefs.folders.collectAsStateWithLifecycle()
             val byPackage by NotificationStore.byPackage.collectAsStateWithLifecycle()
             val widgetIds by prefs.widgetIds.collectAsStateWithLifecycle()
+            val searchContacts by prefs.searchContacts.collectAsStateWithLifecycle()
             val widgetManager = remember { AppWidgetManager.getInstance(this@HomeActivity) }
             var widgetRefresh by remember { mutableIntStateOf(0) }
             val removeWidget: (Int) -> Unit = { id ->
@@ -126,6 +133,20 @@ class HomeActivity : ComponentActivity() {
             val activeIconPack by iconPacks.activePack.collectAsStateWithLifecycle()
             val packVersion by iconPacks.version.collectAsStateWithLifecycle()
             val iconOverrides by prefs.iconOverrides.collectAsStateWithLifecycle()
+            val contactsRepo = remember { ContactsRepository(this@HomeActivity) }
+            var contactsGranted by remember { mutableStateOf(hasContactsPermission()) }
+            val requestContacts = rememberLauncherForActivityResult(
+                ActivityResultContracts.RequestPermission(),
+            ) { granted ->
+                contactsGranted = granted
+                prefs.setSearchContacts(granted)
+                if (granted) {
+                    contactsRepo.refresh()
+                } else {
+                    Toast.makeText(this@HomeActivity, "Contacts permission denied", Toast.LENGTH_SHORT).show()
+                }
+            }
+            val contactList by contactsRepo.contacts.collectAsStateWithLifecycle()
             val density = LocalDensity.current.density
             val iconPx = (iconSizeDp * density).toInt()
             val iconFor: (AppEntry) -> androidx.compose.ui.graphics.ImageBitmap? = { app ->
@@ -160,6 +181,12 @@ class HomeActivity : ComponentActivity() {
                     .filter { widgetManager.getAppWidgetInfo(it) == null }
                     .forEach(removeWidget)
                 widgetRefresh++
+                contactsGranted = hasContactsPermission()
+                if (prefs.searchContacts.value && contactsGranted) {
+                    contactsRepo.refresh()
+                } else if (prefs.searchContacts.value) {
+                    prefs.setSearchContacts(false)
+                }
             }
 
             val notifiedPackages = if (notificationsEnabled) byPackage.keys else emptySet()
@@ -217,6 +244,17 @@ class HomeActivity : ComponentActivity() {
                             widgets = widgetEntries,
                             onAddWidget = ::addWidget,
                             onRemoveWidget = removeWidget,
+                            searchContacts = searchContacts,
+                            onSearchContacts = { enabled ->
+                                if (!enabled) {
+                                    prefs.setSearchContacts(false)
+                                } else if (contactsGranted) {
+                                    prefs.setSearchContacts(true)
+                                    contactsRepo.refresh()
+                                } else {
+                                    requestContacts.launch(Manifest.permission.READ_CONTACTS)
+                                }
+                            },
                             onTheme = prefs::setTheme,
                             onAccent = prefs::setAccent,
                             onIconSize = prefs::setIconSize,
@@ -232,6 +270,19 @@ class HomeActivity : ComponentActivity() {
                         BackHandler { searching = false }
                         SearchOverlay(
                             apps = visibleApps,
+                            contacts = if (searchContacts && contactsGranted) contactList else emptyList(),
+                            onOpenContact = { contact ->
+                                searching = false
+                                runCatching {
+                                    startActivity(
+                                        Intent(Intent.ACTION_DIAL, Uri.parse("tel:${Uri.encode(contact.number)}")),
+                                    )
+                                }
+                            },
+                            onWebSearch = { query ->
+                                searching = false
+                                openWebSearch(query)
+                            },
                             iconFor = iconFor,
                             iconSizeDp = iconSizeDp,
                             onLaunch = {
@@ -465,6 +516,19 @@ class HomeActivity : ComponentActivity() {
             widgetHost.deleteAppWidgetId(id)
             pendingWidgetId = AppWidgetManager.INVALID_APPWIDGET_ID
             Toast.makeText(this, "No widget picker available", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    private fun hasContactsPermission(): Boolean =
+        ContextCompat.checkSelfPermission(this, Manifest.permission.READ_CONTACTS) ==
+            PackageManager.PERMISSION_GRANTED
+
+    private fun openWebSearch(query: String) {
+        val intent = Intent(Intent.ACTION_WEB_SEARCH).putExtra(SearchManager.QUERY, query)
+        runCatching { startActivity(intent) }.recoverCatching {
+            startActivity(
+                Intent(Intent.ACTION_VIEW, Uri.parse("https://duckduckgo.com/?q=${Uri.encode(query)}")),
+            )
         }
     }
 
