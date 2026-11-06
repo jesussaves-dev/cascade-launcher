@@ -43,6 +43,8 @@ fun AppActionSheet(
     onAppInfo: () -> Unit,
     onUninstall: () -> Unit,
     onHide: () -> Unit,
+    canChooseIcon: Boolean = false,
+    onChooseIcon: () -> Unit = {},
     onDismiss: () -> Unit,
 ) {
     ModalBottomSheet(onDismissRequest = onDismiss) {
@@ -73,6 +75,7 @@ fun AppActionSheet(
                 }
                 Spacer(Modifier.height(8.dp))
             }
+            if (canChooseIcon) ActionRow("Choose icon", onChooseIcon)
             ActionRow("Add to folder", onAddToFolder)
             ActionRow(if (pinned) "Unpin from favorites" else "Pin to favorites", onPinToggle)
             ActionRow("App info", onAppInfo)

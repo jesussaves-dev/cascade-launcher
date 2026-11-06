@@ -65,10 +65,17 @@ class HomeActivity : ComponentActivity() {
             val packs by iconPacks.packs.collectAsStateWithLifecycle()
             val activeIconPack by iconPacks.activePack.collectAsStateWithLifecycle()
             val packVersion by iconPacks.version.collectAsStateWithLifecycle()
+            val iconOverrides by prefs.iconOverrides.collectAsStateWithLifecycle()
             val density = LocalDensity.current.density
             val iconPx = (iconSizeDp * density).toInt()
-            val iconFor: (AppEntry) -> androidx.compose.ui.graphics.ImageBitmap? = {
-                iconPacks.icon(it, iconPx) ?: repo.icon(it, iconPx)
+            val iconFor: (AppEntry) -> androidx.compose.ui.graphics.ImageBitmap? = { app ->
+                val override = iconOverrides[app.key]
+                val pack = activeIconPack
+                (if (override != null && pack != null) {
+                    iconPacks.iconByDrawable(pack, override, iconPx)
+                } else {
+                    null
+                }) ?: iconPacks.icon(app, iconPx) ?: repo.icon(app, iconPx)
             }
 
             var searching by rememberSaveable { mutableStateOf(false) }
@@ -78,6 +85,7 @@ class HomeActivity : ComponentActivity() {
                 mutableStateOf(isNotificationListenerEnabled(this@HomeActivity))
             }
             var selected by remember { mutableStateOf<AppEntry?>(null) }
+            var iconPickerFor by remember { mutableStateOf<AppEntry?>(null) }
             var openedFolder by remember { mutableStateOf<Folder?>(null) }
             var folderAction by remember { mutableStateOf<Folder?>(null) }
             var removingFromFolder by remember { mutableStateOf<Pair<Folder, AppEntry>?>(null) }
@@ -120,7 +128,7 @@ class HomeActivity : ComponentActivity() {
             }
 
             CascadeTheme(mode = theme, accentIndex = accent) {
-                key(activeIconPack, packVersion) {
+                key(activeIconPack, packVersion, iconOverrides) {
                 when {
                     showSettings -> {
                         BackHandler { showSettings = false }
@@ -329,7 +337,32 @@ class HomeActivity : ComponentActivity() {
                             prefs.hide(app.key)
                             selected = null
                         },
+                        canChooseIcon = activeIconPack != null,
+                        onChooseIcon = {
+                            selected = null
+                            iconPickerFor = app
+                        },
                         onDismiss = { selected = null },
+                    )
+                }
+                iconPickerFor?.let { app ->
+                    IconPickerDialog(
+                        appLabel = app.label,
+                        packageName = app.packageName,
+                        icons = iconPacks.icons(activeIconPack),
+                        hasOverride = app.key in iconOverrides,
+                        iconFor = { icon ->
+                            activeIconPack?.let { iconPacks.iconByDrawable(it, icon.drawable, iconPx) }
+                        },
+                        onPick = { icon ->
+                            prefs.setIconOverride(app.key, icon.drawable)
+                            iconPickerFor = null
+                        },
+                        onReset = {
+                            prefs.clearIconOverride(app.key)
+                            iconPickerFor = null
+                        },
+                        onDismiss = { iconPickerFor = null },
                     )
                 }
                 }
