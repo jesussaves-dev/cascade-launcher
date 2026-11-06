@@ -29,11 +29,13 @@ any third-party launcher.
 - Icon packs: use an installed ADW icon pack, with the system icon as fallback
 - Per-app icons: long-press any app and pick a different icon from the pack
 - Large clock at the top of the list, following the system 12/24-hour setting
+- Weather for a city you choose on the date line, and an optional daily KJV
+  verse underneath
 - App widgets hosted under the clock; add or remove them in settings
 - Light, dark or system theme, six accent colours, adjustable icon size
 - Works as the system default launcher
 
-Not included (deliberately): notification history or replies, weather,
+Not included (deliberately): notification history or replies,
 AI integrations, backup, work profiles, analytics.
 
 ## Build
@@ -101,6 +103,17 @@ that name.
 The home screen starts with a clock: the time in the system's 12- or 24-hour
 format, today's date underneath, updated every minute.
 
+Settings → **Header** adds two optional things to the date line:
+
+- **Show weather** — pick a city once, and the current temperature and a small
+  weather glyph sit at the right of the date. Data comes from Open-Meteo; the
+  reading is refreshed at most every 30 minutes, cached on the device, and
+  hidden if the request fails. Celsius, or Fahrenheit where the system locale
+  uses it. No location permission is requested.
+- **Show a daily Bible verse** — King James Version text under the date, one
+  verse per day, off by default. The verses are bundled in the app and need no
+  network.
+
 Settings → **Widgets** → **Add widget** opens the system widget picker; the
 widget appears under the clock, above favourites. **Remove** takes it off
 again and releases its binding. Widget ids are stored locally, and a widget
@@ -117,7 +130,8 @@ switch off again.
 
 A "Search the web for …" row at the bottom hands the query to the system
 search handler, or to DuckDuckGo in the browser when there is none. Cascade
-has no network permission of its own.
+does not use the network for search; its only request is the weather lookup
+below, and only when you turn it on.
 
 ## Project layout
 

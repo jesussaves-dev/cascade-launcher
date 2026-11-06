@@ -347,7 +347,9 @@ class HomeActivity : ComponentActivity() {
                             onFolderOpen = { openedFolder = it },
                             onFolderLongPress = { folderAction = it },
                             widgets = { WidgetArea(widgetHost, widgetIds, removeWidget) },
-                            weather = if (showWeather) cachedWeather else null,
+                            weather = cachedWeather?.takeIf {
+                                showWeather && System.currentTimeMillis() - it.updatedAtMillis < 24 * 60 * 60_000
+                            },
                             showWeather = showWeather,
                             verse = dailyVerse,
                             fahrenheit = isFahrenheitLocale(Locale.getDefault()),
