@@ -11,7 +11,8 @@ any third-party launcher.
 ## Features
 
 - Vertical A–Z app list with sticky letter headers and a `#` bucket
-- Favourites: long-press any app and pin it; no limit, shown as full rows above the A–Z list
+- Favourites: long-press any app and pin it; no limit, shown as full rows above
+  the A–Z list, and dragging the handle on a row reorders them
 - Wave alphabet rail on the right: drag to jump, empty letters are dimmed
 - Configurable bottom button: tap and swipe-up each run Search, the voice
   assistant, or any app you choose
