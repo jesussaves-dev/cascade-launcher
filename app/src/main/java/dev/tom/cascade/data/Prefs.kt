@@ -57,6 +57,9 @@ class Prefs(context: Context) {
         MutableStateFlow(prefs.getBoolean(KEY_SHOW_NOTIFICATION_PREVIEWS, true))
     val showNotificationPreviews: StateFlow<Boolean> = _showNotificationPreviews.asStateFlow()
 
+    private val _searchContacts = MutableStateFlow(prefs.getBoolean(KEY_SEARCH_CONTACTS, false))
+    val searchContacts: StateFlow<Boolean> = _searchContacts.asStateFlow()
+
     private val _folders = MutableStateFlow(FolderCodec.decode(prefs.getString(KEY_FOLDERS, null)))
     val folders: StateFlow<List<Folder>> = _folders.asStateFlow()
 
@@ -202,6 +205,11 @@ class Prefs(context: Context) {
         prefs.edit().putBoolean(KEY_SHOW_NOTIFICATION_PREVIEWS, enabled).apply()
     }
 
+    fun setSearchContacts(enabled: Boolean) {
+        _searchContacts.value = enabled
+        prefs.edit().putBoolean(KEY_SEARCH_CONTACTS, enabled).apply()
+    }
+
     companion object {
         const val PREFS_NAME = "cascade"
         const val DEFAULT_ICON_SIZE_DP = 40
@@ -214,6 +222,7 @@ class Prefs(context: Context) {
         private const val KEY_BUTTON_TAP = "button_tap"
         private const val KEY_BUTTON_SWIPE = "button_swipe"
         private const val KEY_SHOW_NOTIFICATION_PREVIEWS = "show_notification_previews"
+        private const val KEY_SEARCH_CONTACTS = "search_contacts"
         private const val KEY_FOLDERS = "folders"
         private const val KEY_ICON_PACK = "icon_pack"
         private const val KEY_ICON_OVERRIDES = "icon_overrides"
