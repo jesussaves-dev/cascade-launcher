@@ -224,8 +224,13 @@ class HomeActivity : ComponentActivity() {
             }
 
             val listState = androidx.compose.foundation.lazy.rememberLazyListState()
-            LaunchedEffect(Unit) {
-                if (!keepScroll) listState.scrollToItem(0)
+            var startHandled by remember { mutableStateOf(false) }
+            LaunchedEffect(allApps.isNotEmpty()) {
+                if (!keepScroll && !startHandled && allApps.isNotEmpty()) {
+                    // Fresh launch (including after a crash) opens on Favourites.
+                    listState.scrollToItem(0)
+                    startHandled = true
+                }
             }
 
             CascadeTheme(mode = theme, accentIndex = accent) {
