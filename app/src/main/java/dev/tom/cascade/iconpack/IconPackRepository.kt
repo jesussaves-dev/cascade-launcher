@@ -17,6 +17,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import org.xmlpull.v1.XmlPullParser
+import javax.xml.parsers.DocumentBuilderFactory
 
 data class IconPackInfo(val packageName: String, val label: String)
 
@@ -29,7 +30,9 @@ class IconPackRepository(
 
     // Published wholesale so composition can read them without locking.
     @Volatile private var mappings: Map<String, IconPackMapping?> = emptyMap()
+    @Volatile private var iconsByPack: Map<String, List<PackIcon>> = emptyMap()
     private val loadedMappings = HashMap<String, IconPackMapping?>()
+    private val loadedIcons = HashMap<String, List<PackIcon>>()
     private val packUpdateTimes = HashMap<String, Long>()
     private val packContexts = HashMap<String, Context>()
     private val misses = LinkedHashSet<String>()
@@ -79,6 +82,20 @@ class IconPackRepository(
         val cacheKey = "$pack|${app.key}|$sizePx"
         cache.get(cacheKey)?.let { return it }
         if (cacheKey in misses) return null
+        return bitmapFor(pack, drawableName, sizePx, cacheKey)
+    }
+
+    fun iconByDrawable(packageName: String, drawable: String, sizePx: Int): ImageBitmap? {
+        val cacheKey = "$packageName|drawable:$drawable|$sizePx"
+        cache.get(cacheKey)?.let { return it }
+        if (cacheKey in misses) return null
+        return bitmapFor(packageName, drawable, sizePx, cacheKey)
+    }
+
+    fun icons(packageName: String?): List<PackIcon> =
+        packageName?.let { iconsByPack[it] }.orEmpty()
+
+    private fun bitmapFor(pack: String, drawableName: String, sizePx: Int, cacheKey: String): ImageBitmap? {
         val result = runCatching {
             val packContext = packContexts.getOrPut(pack) { appContext.createPackageContext(pack, 0) }
             val id = packContext.resources.getIdentifier(drawableName, "drawable", pack)
@@ -109,15 +126,19 @@ class IconPackRepository(
             loadedMappings[packageName] = result.getOrNull()
             packUpdateTimes[packageName] = updateTime(packageName)
         }
+        runCatching { loadIcons(packageName) }.getOrNull()?.let { loadedIcons[packageName] = it }
         mappings = HashMap(loadedMappings)
+        iconsByPack = HashMap(loadedIcons)
         _version.value += 1
     }
 
     private fun invalidate(packageName: String) {
         loadedMappings.remove(packageName)
+        loadedIcons.remove(packageName)
         packUpdateTimes.remove(packageName)
         packContexts.remove(packageName)
         mappings = HashMap(loadedMappings)
+        iconsByPack = HashMap(loadedIcons)
         cache.evictAll()
         misses.clear()
         _version.value += 1
@@ -145,6 +166,45 @@ class IconPackRepository(
             }
             .sortedBy { it.label.lowercase() }
     }
+
+    private fun loadIcons(packageName: String): List<PackIcon> {
+        val packContext = appContext.createPackageContext(packageName, 0)
+        runCatching {
+            packContext.assets.open("drawable.xml").use { parseIcons(it) }
+        }.getOrNull()?.let { if (it.isNotEmpty()) return it }
+        val id = packContext.resources.getIdentifier("drawable", "xml", packageName)
+        if (id == 0) return emptyList()
+        val items = mutableListOf<PackIcon>()
+        packContext.resources.getXml(id).use { parser ->
+            var event = parser.eventType
+            while (event != XmlPullParser.END_DOCUMENT) {
+                if (event == XmlPullParser.START_TAG && parser.name == "item") {
+                    val drawable = parser.getAttributeValue(null, "drawable")
+                    if (!drawable.isNullOrBlank()) {
+                        items += PackIcon(drawable, parser.getAttributeValue(null, "name") ?: drawable)
+                    }
+                }
+                event = parser.next()
+            }
+        }
+        return items.sortedBy { it.name.lowercase() }
+    }
+
+    private fun parseIcons(input: java.io.InputStream): List<PackIcon> = runCatching {
+        val factory = DocumentBuilderFactory.newInstance()
+        runCatching { factory.setFeature("http://apache.org/xml/features/disallow-doctype-decl", true) }
+        runCatching { factory.setFeature("http://xml.org/sax/features/external-general-entities", false) }
+        runCatching { factory.setFeature("http://xml.org/sax/features/external-parameter-entities", false) }
+        factory.isExpandEntityReferences = false
+        val doc = factory.newDocumentBuilder().parse(input)
+        val nodes = doc.getElementsByTagName("item")
+        (0 until nodes.length).mapNotNull { index ->
+            val element = nodes.item(index) as? org.w3c.dom.Element ?: return@mapNotNull null
+            val drawable = element.getAttribute("drawable")
+            if (drawable.isBlank()) return@mapNotNull null
+            PackIcon(drawable, element.getAttribute("name").ifBlank { drawable })
+        }.sortedBy { it.name.lowercase() }
+    }.getOrDefault(emptyList())
 
     private fun loadMapping(packageName: String): IconPackMapping? {
         val packContext = appContext.createPackageContext(packageName, 0)
