@@ -84,6 +84,10 @@ class Prefs(context: Context) {
         writeFavorites(next)
     }
 
+    fun setFavorites(keys: List<String>) {
+        writeFavorites(keys)
+    }
+
     fun createFolder(name: String, appKey: String): Folder {
         val folder = Folder(
             id = UUID.randomUUID().toString(),
