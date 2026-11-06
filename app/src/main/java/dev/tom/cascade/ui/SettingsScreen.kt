@@ -253,12 +253,14 @@ fun SettingsScreen(
                 Column(modifier = Modifier.weight(1f)) {
                     Text("Double-tap the clock to lock")
                     Text(
-                        text = "Needs device admin",
+                        text = if (adminActive) "On" else "Off — needs device admin",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 }
-                Switch(checked = adminActive, onCheckedChange = { onToggleAdmin() })
+                TextButton(onClick = onToggleAdmin) {
+                    Text(if (adminActive) "Turn off" else "Turn on")
+                }
             }
 
             HorizontalDivider(Modifier.padding(vertical = 16.dp))

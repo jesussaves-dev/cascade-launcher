@@ -54,7 +54,7 @@ fun CascadeTheme(
         }
     }
     MaterialTheme(colorScheme = scheme) {
-        Surface(color = scheme.background, contentColor = scheme.onBackground, content = content)
+        Surface(color = Color.Transparent, contentColor = scheme.onBackground, content = content)
     }
 }
 

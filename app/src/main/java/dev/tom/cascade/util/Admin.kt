@@ -5,6 +5,7 @@ import android.content.ComponentName
 import android.app.Activity
 import android.content.Context
 import android.content.Intent
+import android.widget.Toast
 import dev.tom.cascade.admin.CascadeDeviceAdmin
 
 private fun admin(context: Context) = ComponentName(context, CascadeDeviceAdmin::class.java)
@@ -19,9 +20,10 @@ fun requestDeviceAdmin(context: Context) {
             DevicePolicyManager.EXTRA_ADD_EXPLANATION,
             "Lets Cascade lock the screen when you double-tap the clock.",
         )
-    // DeviceAdminAdd refuses NEW_TASK, so only add it when no Activity is available.
     if (context !is Activity) intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-    runCatching { context.startActivity(intent) }
+    runCatching { context.startActivity(intent) }.onFailure {
+        Toast.makeText(context, "No device-admin screen available", Toast.LENGTH_SHORT).show()
+    }
 }
 
 fun lockDevice(context: Context): Boolean {

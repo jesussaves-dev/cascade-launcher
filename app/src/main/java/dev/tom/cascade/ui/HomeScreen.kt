@@ -210,7 +210,7 @@ fun HomeScreen(
                             color = MaterialTheme.colorScheme.primary,
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .background(MaterialTheme.colorScheme.background.copy(alpha = 0.62f))
+                                .background(MaterialTheme.colorScheme.background)
                                 .padding(horizontal = 20.dp, vertical = 8.dp),
                         )
                     }

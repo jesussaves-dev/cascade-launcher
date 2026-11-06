@@ -2,7 +2,7 @@
 
 A small, open-source Android home-screen launcher: one vertical alphabetical
 list of your apps, favourites pinned above it, and search the moment you need it.
-No accounts, no ads, no paywalls, no network permission.
+No accounts, no ads, no paywalls; the only network request is the weather lookup.
 
 Cascade is an independent project inspired by the *workflow* of Niagara
 Launcher. It contains no code, assets, strings, source files or resources from
@@ -132,6 +132,7 @@ stay readable on bright photos in both themes.
   Settings → Gestures → Double-tap the clock to lock and confirm the system
   device-admin screen. The admin declares the force-lock policy only; it cannot
   erase, set passwords or watch anything. Turn it off from the same Settings row
+  (which opens the system admin screen)
   or from Android's device-admin settings, and the switch follows.
 
 The gestures live on the clock because the app list takes every other touch.
