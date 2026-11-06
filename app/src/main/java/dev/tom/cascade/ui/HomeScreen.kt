@@ -39,14 +39,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.rememberUpdatedState
-import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
-import androidx.compose.ui.input.nestedscroll.NestedScrollSource
-import androidx.compose.ui.input.nestedscroll.nestedScroll
-import androidx.compose.ui.platform.LocalDensity
 import dev.tom.cascade.model.AppEntry
 import dev.tom.cascade.model.Folder
 import dev.tom.cascade.model.Weather
@@ -85,31 +78,6 @@ fun HomeScreen(
     fahrenheit: Boolean = false,
     listState: LazyListState = rememberLazyListState(),
 ) {
-    val openSearch by rememberUpdatedState(onOpenSearch)
-    val threshold = with(LocalDensity.current) { 48.dp.toPx() }
-    var pulled by remember { mutableFloatStateOf(0f) }
-    val pullToSearch = remember {
-        object : NestedScrollConnection {
-            override fun onPostScroll(
-                consumed: Offset,
-                available: Offset,
-                source: NestedScrollSource,
-            ): Offset {
-                if (source == NestedScrollSource.UserInput) {
-                    if (available.y > 0f) {
-                        pulled += available.y
-                        if (pulled >= threshold) {
-                            pulled = 0f
-                            openSearch()
-                        }
-                    } else if (available.y < 0f) {
-                        pulled = 0f
-                    }
-                }
-                return Offset.Zero
-            }
-        }
-    }
     val scope = rememberCoroutineScope()
     Box(
         modifier = Modifier
@@ -194,9 +162,7 @@ fun HomeScreen(
             LazyColumn(
                 state = listState,
                 contentPadding = androidx.compose.foundation.layout.PaddingValues(bottom = 96.dp),
-                modifier = Modifier
-                    .fillMaxSize()
-                    .nestedScroll(pullToSearch),
+                modifier = Modifier.fillMaxSize(),
             ) {
                 if (favorites.isNotEmpty()) {
                     item(key = "favorites-header") {

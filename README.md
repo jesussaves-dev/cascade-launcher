@@ -15,8 +15,7 @@ any third-party launcher.
 - Wave alphabet rail on the right: drag to jump, empty letters are dimmed
 - Configurable bottom button: tap and swipe-up each run Search, the voice
   assistant, or any app you choose
-- Instant search: tap the search field, pull down past the top of the list,
-  or tap the bottom button
+- Instant search: tap the search field or the bottom button
 - Optional contact search and a “search the web” row in the search overlay
 - Pop-up folders: long-press an app to create a folder or move it into one;
   the folder sits in the alphabetical list with a 2×2 preview and opens a
