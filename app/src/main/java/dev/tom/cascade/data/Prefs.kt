@@ -59,6 +59,11 @@ class Prefs(context: Context) {
     private val _folders = MutableStateFlow(FolderCodec.decode(prefs.getString(KEY_FOLDERS, null)))
     val folders: StateFlow<List<Folder>> = _folders.asStateFlow()
 
+    private val _iconPack = MutableStateFlow(
+        prefs.getString(KEY_ICON_PACK, null)?.takeIf { it.isNotEmpty() }
+    )
+    val iconPack: StateFlow<String?> = _iconPack.asStateFlow()
+
     fun toggleFavorite(key: String) {
         val next = _favorites.value.toMutableList()
         if (!next.remove(key)) next.add(key)
@@ -152,6 +157,11 @@ class Prefs(context: Context) {
         prefs.edit().putString(KEY_BUTTON_SWIPE, encodeButtonAction(action)).apply()
     }
 
+    fun setIconPack(packageName: String?) {
+        _iconPack.value = packageName
+        prefs.edit().putString(KEY_ICON_PACK, packageName.orEmpty()).apply()
+    }
+
     fun setShowNotificationPreviews(enabled: Boolean) {
         _showNotificationPreviews.value = enabled
         prefs.edit().putBoolean(KEY_SHOW_NOTIFICATION_PREVIEWS, enabled).apply()
@@ -170,5 +180,6 @@ class Prefs(context: Context) {
         private const val KEY_BUTTON_SWIPE = "button_swipe"
         private const val KEY_SHOW_NOTIFICATION_PREVIEWS = "show_notification_previews"
         private const val KEY_FOLDERS = "folders"
+        private const val KEY_ICON_PACK = "icon_pack"
     }
 }
