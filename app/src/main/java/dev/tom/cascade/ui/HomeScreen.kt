@@ -67,6 +67,8 @@ fun HomeScreen(
     onLongPress: (AppEntry) -> Unit,
     onOpenSearch: () -> Unit,
     onOpenSettings: () -> Unit,
+    onButtonTap: () -> Unit,
+    onButtonSwipeUp: () -> Unit,
     iconFor: (AppEntry) -> ImageBitmap?,
     iconSizeDp: Int,
 ) {
@@ -178,6 +180,7 @@ fun HomeScreen(
         } else {
             LazyColumn(
                 state = listState,
+                contentPadding = androidx.compose.foundation.layout.PaddingValues(bottom = 96.dp),
                 modifier = Modifier
                     .fillMaxSize()
                     .nestedScroll(pullToSearch),
@@ -208,6 +211,13 @@ fun HomeScreen(
         }
             }
         }
+        CascadeButton(
+            onTap = onButtonTap,
+            onSwipeUp = onButtonSwipeUp,
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .padding(bottom = 16.dp),
+        )
         if (sections.isNotEmpty()) {
             val presentLetters = remember(sections) { sectionOffsets(sections).keys }
             val active by remember(sections, listState) {

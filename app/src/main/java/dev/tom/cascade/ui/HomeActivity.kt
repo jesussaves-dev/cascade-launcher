@@ -1,5 +1,6 @@
 package dev.tom.cascade.ui
 
+import android.content.ActivityNotFoundException
 import android.content.ComponentName
 import android.content.Intent
 import android.net.Uri
@@ -20,6 +21,7 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import dev.tom.cascade.CascadeApp
+import dev.tom.cascade.data.ButtonAction
 import dev.tom.cascade.model.AppEntry
 import dev.tom.cascade.ui.theme.CascadeTheme
 import dev.tom.cascade.util.canFavorite
@@ -45,6 +47,8 @@ class HomeActivity : ComponentActivity() {
             val accent by prefs.accentIndex.collectAsStateWithLifecycle()
             val iconSizeDp by prefs.iconSizeDp.collectAsStateWithLifecycle()
             val bannerDismissed by prefs.bannerDismissed.collectAsStateWithLifecycle()
+            val buttonTap by prefs.buttonTap.collectAsStateWithLifecycle()
+            val buttonSwipe by prefs.buttonSwipe.collectAsStateWithLifecycle()
             val density = LocalDensity.current.density
             val iconPx = (iconSizeDp * density).toInt()
             val iconFor: (AppEntry) -> androidx.compose.ui.graphics.ImageBitmap? = { repo.icon(it, iconPx) }
@@ -70,6 +74,15 @@ class HomeActivity : ComponentActivity() {
             }
             val installedFavoriteCount = remember(allApps, favoriteKeys) {
                 allApps.count { it.key in favoriteKeys }
+            }
+
+            fun runAction(action: ButtonAction) {
+                when (action) {
+                    ButtonAction.Search -> searching = true
+                    ButtonAction.Voice -> startVoiceAssistant()
+                    is ButtonAction.OpenApp ->
+                        allApps.firstOrNull { it.key == action.key }?.let(::launchApp)
+                }
             }
 
             CascadeTheme(mode = theme, accentIndex = accent) {
@@ -116,6 +129,8 @@ class HomeActivity : ComponentActivity() {
                             onLongPress = { selected = it },
                             onOpenSearch = { searching = true },
                             onOpenSettings = { showSettings = true },
+                            onButtonTap = { runAction(buttonTap) },
+                            onButtonSwipeUp = { runAction(buttonSwipe) },
                             iconFor = iconFor,
                             iconSizeDp = iconSizeDp,
                         )
@@ -172,6 +187,22 @@ class HomeActivity : ComponentActivity() {
                 .setData(Uri.parse("package:${app.packageName}"))
                 .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK),
         )
+    }
+
+    private fun startVoiceAssistant() {
+        val candidates = listOf(
+            Intent(Intent.ACTION_ASSIST).addCategory(Intent.CATEGORY_DEFAULT),
+            Intent(Intent.ACTION_VOICE_COMMAND),
+        )
+        for (intent in candidates) {
+            try {
+                startActivity(intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
+                return
+            } catch (_: ActivityNotFoundException) {
+                // try the next one
+            }
+        }
+        Toast.makeText(this, "No voice assistant available", Toast.LENGTH_SHORT).show()
     }
 
     private fun uninstall(app: AppEntry) {
