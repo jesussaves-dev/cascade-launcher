@@ -1,11 +1,27 @@
 package dev.tom.cascade.util
 
 import dev.tom.cascade.model.AppEntry
+import dev.tom.cascade.model.Folder
 import java.text.Collator
 import java.text.Normalizer
 import java.util.Locale
 
-data class AppSection(val header: String, val apps: List<AppEntry>)
+sealed interface HomeEntry {
+    val key: String
+    val label: String
+
+    data class AppItem(val app: AppEntry) : HomeEntry {
+        override val key: String get() = app.key
+        override val label: String get() = app.label
+    }
+
+    data class FolderItem(val folder: Folder) : HomeEntry {
+        override val key: String get() = "folder:${folder.id}"
+        override val label: String get() = folder.name
+    }
+}
+
+data class AppSection(val header: String, val items: List<HomeEntry>)
 
 const val MAX_FAVORITES = 8
 
@@ -23,9 +39,12 @@ fun favoriteApps(
     apps: List<AppEntry>,
     favoriteKeys: List<String>,
     hidden: Set<String>,
+    folders: List<Folder> = emptyList(),
 ): List<AppEntry> {
+    val folded = folders.flatMap { it.appKeys }.toSet()
     val byKey = apps.associateBy { it.key }
-    return favoriteKeys.mapNotNull(byKey::get).filterNot { it.key in hidden }
+    return favoriteKeys.mapNotNull(byKey::get)
+        .filterNot { it.key in hidden || it.key in folded }
 }
 
 fun sections(
@@ -33,10 +52,15 @@ fun sections(
     favoriteKeys: List<String>,
     hidden: Set<String>,
     collator: Collator = Collator.getInstance(),
+    folders: List<Folder> = emptyList(),
 ): List<AppSection> {
     val pinned = favoriteKeys.toSet()
-    val visible = sortApps(apps.filter { it.key !in hidden && it.key !in pinned }, collator)
-    val grouped = visible.groupBy { headerFor(it.label) }
+    val folded = folders.flatMap { it.appKeys }.toSet()
+    val visibleApps = apps.filter { it.key !in hidden && it.key !in pinned && it.key !in folded }
+    val entries: List<HomeEntry> =
+        visibleApps.map(HomeEntry::AppItem) + folders.map(HomeEntry::FolderItem)
+    val sorted = entries.sortedWith { a, b -> collator.compare(a.label, b.label) }
+    val grouped = sorted.groupBy { headerFor(it.label) }
     // Non-letter labels stay together at the top, letters follow locale order.
     val hash = grouped["#"].orEmpty()
     val letters = grouped.keys
@@ -46,6 +70,15 @@ fun sections(
         if (hash.isNotEmpty()) add(AppSection("#", hash))
         letters.forEach { header -> add(AppSection(header, grouped.getValue(header))) }
     }
+}
+
+fun folderApps(
+    folder: Folder,
+    apps: List<AppEntry>,
+    hidden: Set<String>,
+): List<AppEntry> {
+    val byKey = apps.associateBy { it.key }
+    return folder.appKeys.mapNotNull(byKey::get).filterNot { it.key in hidden }
 }
 
 fun searchApps(

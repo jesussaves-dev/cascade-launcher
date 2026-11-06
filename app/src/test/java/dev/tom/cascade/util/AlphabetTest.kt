@@ -8,7 +8,7 @@ import org.junit.Test
 class AlphabetTest {
     private fun app(label: String) = AppEntry("${label.lowercase()}/.Main", label, label.lowercase(), ".Main")
     private fun section(header: String, count: Int) =
-        AppSection(header, (1..count).map { app("$header$it") })
+        AppSection(header, (1..count).map { HomeEntry.AppItem(app("$header$it")) })
 
     private val sections = listOf(section("A", 2), section("C", 1), section("Z", 3))
 

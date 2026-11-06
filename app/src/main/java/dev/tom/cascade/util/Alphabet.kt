@@ -10,7 +10,7 @@ fun sectionOffsets(sections: List<AppSection>): Map<String, Int> {
     return buildMap {
         sections.forEach { section ->
             put(section.header, offset)
-            offset += 1 + section.apps.size
+            offset += 1 + section.items.size
         }
     }
 }
@@ -28,7 +28,7 @@ fun jumpTarget(letter: String, sections: List<AppSection>): Int? {
 fun activeLetter(firstVisibleItemIndex: Int, sections: List<AppSection>): String? {
     var offset = 0
     for (section in sections) {
-        val end = offset + 1 + section.apps.size
+        val end = offset + 1 + section.items.size
         if (firstVisibleItemIndex in offset until end) return section.header
         offset = end
     }

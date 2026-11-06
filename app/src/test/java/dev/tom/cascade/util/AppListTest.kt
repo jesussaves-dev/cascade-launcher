@@ -14,6 +14,9 @@ class AppListTest {
     private fun app(label: String, pkg: String = label.lowercase()) =
         AppEntry("$pkg/.Main", label, pkg, ".Main")
 
+    private fun List<HomeEntry>.apps(): List<AppEntry> =
+        mapNotNull { (it as? HomeEntry.AppItem)?.app }
+
     private val apps = listOf(
         app("Zebra"), app("alarm"), app("Photos"), app("123 Notes"),
         app("Éclair"), app("Calendar"), app("Maps"), app("\uD83D\uDE00 Fun"),
@@ -27,12 +30,12 @@ class AppListTest {
     @Test fun `sections use letters and hash bucket for non letters`() {
         val result = sections(apps, emptyList(), emptySet(), collator)
         assertEquals(listOf("#", "A", "C", "É", "M", "P", "Z"), result.map { it.header })
-        assertEquals(listOf("123 Notes", "\uD83D\uDE00 Fun"), result.first().apps.map { it.label })
+        assertEquals(listOf("123 Notes", "\uD83D\uDE00 Fun"), result.first().items.apps().map { it.label })
     }
 
     @Test fun `hidden apps never appear`() {
         val result = sections(apps, emptyList(), setOf("maps/.Main"), collator)
-        assertEquals(0, result.flatMap { it.apps }.count { it.label == "Maps" })
+        assertEquals(0, result.flatMap { it.items.apps() }.count { it.label == "Maps" })
         assertEquals(0, searchApps(apps, "maps", setOf("maps/.Main"), collator).size)
     }
 
@@ -40,7 +43,7 @@ class AppListTest {
         val favs = listOf("photos/.Main", "zebra/.Main", "gone/.Main")
         val result = sections(apps, favs, setOf("zebra/.Main"), collator)
         assertEquals(listOf("photos/.Main"), favoriteApps(apps, favs, setOf("zebra/.Main")).map { it.key })
-        assertEquals(0, result.flatMap { it.apps }.count { it.key == "photos/.Main" })
+        assertEquals(0, result.flatMap { it.items.apps() }.count { it.key == "photos/.Main" })
     }
 
     @Test fun `search ranks prefix before contains and ignores accents`() {

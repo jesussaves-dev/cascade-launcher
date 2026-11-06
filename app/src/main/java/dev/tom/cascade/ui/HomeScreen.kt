@@ -49,6 +49,7 @@ import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalDensity
 import dev.tom.cascade.model.AppEntry
 import dev.tom.cascade.util.AppSection
+import dev.tom.cascade.util.HomeEntry
 import dev.tom.cascade.util.activeLetter
 import dev.tom.cascade.util.jumpTarget
 import dev.tom.cascade.util.railLetterFor
@@ -201,7 +202,10 @@ fun HomeScreen(
                                 .padding(horizontal = 20.dp, vertical = 8.dp),
                         )
                     }
-                    items(section.apps, key = { it.key }) { app ->
+                    items(
+                        section.items.filterIsInstance<HomeEntry.AppItem>().map { it.app },
+                        key = { it.key },
+                    ) { app ->
                         AppRow(
                             app = app,
                             icon = remember(app.key, iconSizeDp) { iconFor(app) },
