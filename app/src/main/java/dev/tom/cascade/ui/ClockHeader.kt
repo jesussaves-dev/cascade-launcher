@@ -1,7 +1,6 @@
 package dev.tom.cascade.ui
 
 import android.text.format.DateFormat
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -66,16 +65,18 @@ fun ClockHeader(
         )
         if (!compact) {
             Row(
-                modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceBetween,
             ) {
                 Text(
                     text = formatClockDate(now),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.weight(1f, fill = false),
                 )
                 if (showWeather && weather != null) {
+                    Spacer(Modifier.width(8.dp))
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         WeatherGlyphIcon(glyph = glyphFor(weather.code))
                         Spacer(Modifier.width(4.dp))
