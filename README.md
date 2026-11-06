@@ -26,11 +26,12 @@ any third-party launcher.
   notifications, and their titles, text and relative time in the long-press
   sheet — tap to open, X to dismiss; previews can be hidden
 - Hidden app management in settings
+- Icon packs: use an installed ADW icon pack, with the system icon as fallback
 - Light, dark or system theme, six accent colours, adjustable icon size
 - Works as the system default launcher
 
-Not included (deliberately): widgets, icon packs, notification history or
-replies, weather, AI integrations, backup, work profiles, analytics.
+Not included (deliberately): widgets, notification history or replies,
+weather, AI integrations, backup, work profiles, analytics.
 
 ## Build
 
@@ -75,11 +76,21 @@ Turn it on with **Settings → Notifications → Open**, enable Cascade, and com
 back. The **Show notification previews** switch hides sender names and message
 text, leaving dots and times only. Revoke access at any time; dots disappear.
 
+## Icon packs
+
+Settings → **Icon pack** lists the ADW-format icon packs installed on your
+device (the same standard most launchers use). Pick one and every app, favourite
+and folder preview switches; pick **System icons** to switch back. Apps the pack
+does not cover keep their normal icon, and a missing icon falls back to a letter
+tile rather than a blank space. Packs are read only, locally, through Android's
+package APIs: no new permissions and no network access.
+
 ## Project layout
 
 ```
 app/src/main/java/dev/tom/cascade/
   data/          apps repository, preferences
+  iconpack/      icon pack discovery and mapping
   model/         app and folder models
   notifications/ listener, in-memory store, notification model
   ui/            Compose screens and activity
