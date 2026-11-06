@@ -18,6 +18,7 @@ any third-party launcher.
   assistant, or any app you choose
 - Instant search: tap the search field, pull down past the top of the list,
   or tap the bottom button
+- Optional contact search and a “search the web” row in the search overlay
 - Pop-up folders: long-press an app to create a folder or move it into one;
   the folder sits in the alphabetical list with a 2×2 preview and opens a
   4-column popup
@@ -107,13 +108,25 @@ again and releases its binding. Widget ids are stored locally, and a widget
 whose app is uninstalled disappears. Widgets are not resized or reordered in
 this version.
 
+## Search
+
+Typing filters apps instantly. Settings → **Search** → **Include contacts**
+adds matching contacts under the app results; tapping one opens the dialer.
+The permission is requested only when you switch it on, contacts are held in
+memory and never written to disk, and revoking the permission turns the
+switch off again.
+
+A "Search the web for …" row at the bottom hands the query to the system
+search handler, or to DuckDuckGo in the browser when there is none. Cascade
+has no network permission of its own.
+
 ## Project layout
 
 ```
 app/src/main/java/dev/tom/cascade/
-  data/          apps repository, preferences
+  data/          apps repository, contacts repository, preferences
   iconpack/      icon pack discovery and mapping
-  model/         app and folder models
+  model/         app, folder and contact models
   notifications/ listener, in-memory store, notification model
   ui/            Compose screens and activity
   util/          pure sorting, sectioning and search logic
