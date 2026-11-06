@@ -38,6 +38,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.zIndex
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.runtime.getValue
@@ -205,21 +206,36 @@ fun HomeScreen(
                             onClick = { onLaunch(app) },
                             onLongClick = { onLongPress(app) },
                             onMove = { steps ->
-                                favoriteOrder = reorderFavorites(favoriteOrder, index, index + steps)
+                                // Resolve by key so fast drags never reuse a stale index.
+                                val from = favoriteOrder.indexOfFirst { it.key == app.key }
+                                if (from >= 0) {
+                                    favoriteOrder = reorderFavorites(favoriteOrder, from, from + steps)
+                                }
                             },
                             onMoveUp = {
-                                favoriteOrder = reorderFavorites(favoriteOrder, index, index - 1)
-                                onFavoriteMoved(favoriteOrder.map { it.key })
+                                val from = favoriteOrder.indexOfFirst { it.key == app.key }
+                                if (from >= 0) {
+                                    favoriteOrder = reorderFavorites(favoriteOrder, from, from - 1)
+                                    onFavoriteMoved(favoriteOrder.map { it.key })
+                                }
                             },
                             onMoveDown = {
-                                favoriteOrder = reorderFavorites(favoriteOrder, index, index + 1)
-                                onFavoriteMoved(favoriteOrder.map { it.key })
+                                val from = favoriteOrder.indexOfFirst { it.key == app.key }
+                                if (from >= 0) {
+                                    favoriteOrder = reorderFavorites(favoriteOrder, from, from + 1)
+                                    onFavoriteMoved(favoriteOrder.map { it.key })
+                                }
                             },
                             onMoveEnd = {
                                 draggingFavorite = null
                                 onFavoriteMoved(favoriteOrder.map { it.key })
                             },
-                            modifier = Modifier.animateItem(),
+                            // Only the neighbours animate; animating the lifted row fights the finger.
+                            modifier = if (draggingFavorite == app.key) {
+                                Modifier.zIndex(1f)
+                            } else {
+                                Modifier.animateItem()
+                            },
                         )
                     }
                 }

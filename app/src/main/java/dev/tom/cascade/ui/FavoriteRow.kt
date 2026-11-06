@@ -2,6 +2,7 @@ package dev.tom.cascade.ui
 
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.size
@@ -19,6 +20,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
@@ -31,6 +33,7 @@ import androidx.compose.ui.semantics.CustomAccessibilityAction
 import androidx.compose.ui.semantics.customActions
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
+import androidx.compose.foundation.shape.RoundedCornerShape
 import dev.tom.cascade.model.AppEntry
 import kotlin.math.abs
 import kotlinx.coroutines.withTimeout
@@ -67,12 +70,20 @@ fun FavoriteRow(
 
     var pulled by remember { mutableFloatStateOf(0f) }
     var dragging by remember { mutableStateOf(false) }
+    val liftedShape = remember { RoundedCornerShape(12.dp) }
     var travelled by remember { mutableFloatStateOf(0f) }
 
     Row(
         modifier = modifier
             .fillMaxWidth()
-            .graphicsLayer { translationY = pulled }
+            // Opaque while lifted so the row underneath cannot show through it mid-swap.
+            .background(if (dragging) MaterialTheme.colorScheme.surface else Color.Transparent, liftedShape)
+            .graphicsLayer {
+                translationY = pulled
+                shadowElevation = if (dragging) 8.dp.toPx() else 0f
+                shape = liftedShape
+                clip = false
+            }
             .semantics {
                 customActions = listOf(
                     CustomAccessibilityAction("Move up") { onMoveUp(); true },
