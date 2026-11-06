@@ -23,6 +23,7 @@ import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
@@ -41,6 +42,11 @@ fun AlphabetRail(
     var railHeight by remember { mutableIntStateOf(1) }
     var fingerIndex by remember { mutableIntStateOf(-1) }
     val haptic = LocalHapticFeedback.current
+    val density = LocalDensity.current
+    val maxLetterSize = with(density) {
+        (railHeight.toFloat() / letters.size).toSp()
+    }
+    val letterSize = if (maxLetterSize.value < 10f) maxLetterSize else 10.sp
 
     Box(
         modifier = modifier
@@ -99,7 +105,8 @@ fun AlphabetRail(
                 ) {
                     Text(
                         text = letter,
-                        fontSize = 10.sp,
+                        fontSize = letterSize,
+                        lineHeight = letterSize,
                         fontWeight = if (isActive) FontWeight.Bold else FontWeight.Medium,
                         color = if (isActive) {
                             MaterialTheme.colorScheme.primary
