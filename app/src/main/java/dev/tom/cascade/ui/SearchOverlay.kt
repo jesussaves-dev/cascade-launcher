@@ -1,6 +1,7 @@
 package dev.tom.cascade.ui
 
 import androidx.activity.compose.BackHandler
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -34,18 +35,24 @@ import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import dev.tom.cascade.model.AppEntry
+import dev.tom.cascade.model.Contact
 import dev.tom.cascade.util.searchApps
+import dev.tom.cascade.util.searchContacts
 
 @Composable
 fun SearchOverlay(
     apps: List<AppEntry>,
+    contacts: List<Contact> = emptyList(),
     iconFor: (AppEntry) -> ImageBitmap?,
     iconSizeDp: Int,
     onLaunch: (AppEntry) -> Unit,
+    onOpenContact: (Contact) -> Unit = {},
+    onWebSearch: (String) -> Unit = {},
     onDismiss: () -> Unit,
 ) {
     var query by rememberSaveable { mutableStateOf("") }
     val results = remember(apps, query) { searchApps(apps, query, emptySet()) }
+    val contactResults = remember(contacts, query) { searchContacts(contacts, query) }
     val focusRequester = remember { FocusRequester() }
 
     LaunchedEffect(Unit) { focusRequester.requestFocus() }
@@ -79,7 +86,7 @@ fun SearchOverlay(
                 TextButton(onClick = onDismiss) { Text("Cancel") }
             }
 
-            if (results.isEmpty()) {
+            if (results.isEmpty() && contactResults.isEmpty() && query.isBlank()) {
                 Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                     Text(
                         text = "No apps found",
@@ -97,6 +104,44 @@ fun SearchOverlay(
                             onClick = { onLaunch(app) },
                             onLongClick = {},
                         )
+                    }
+                    if (contactResults.isNotEmpty()) {
+                        item(key = "contacts-header") {
+                            Text(
+                                text = "Contacts",
+                                style = MaterialTheme.typography.labelMedium,
+                                color = MaterialTheme.colorScheme.primary,
+                                modifier = Modifier.padding(horizontal = 20.dp, vertical = 8.dp),
+                            )
+                        }
+                        items(contactResults, key = { "contact:${it.key}:${it.number}" }) { contact ->
+                            Column(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clickable { onOpenContact(contact) }
+                                    .padding(horizontal = 20.dp, vertical = 8.dp),
+                            ) {
+                                Text(text = contact.name, maxLines = 1)
+                                Text(
+                                    text = contact.number,
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    maxLines = 1,
+                                )
+                            }
+                        }
+                    }
+                    if (query.isNotBlank()) {
+                        item(key = "web-search") {
+                            Text(
+                                text = "Search the web for \u201C$query\u201D",
+                                color = MaterialTheme.colorScheme.primary,
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clickable { onWebSearch(query) }
+                                    .padding(horizontal = 20.dp, vertical = 16.dp),
+                            )
+                        }
                     }
                 }
             }
