@@ -2,12 +2,20 @@ package dev.tom.cascade.ui
 
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Star
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -36,6 +44,7 @@ fun AlphabetRail(
     letters: List<String>,
     presentLetters: Set<String>,
     active: String?,
+    onFavorites: () -> Unit,
     onSelect: (String) -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -48,14 +57,34 @@ fun AlphabetRail(
     }
     val letterSize = if (maxLetterSize.value < 10f) maxLetterSize else 10.sp
 
-    Box(
+    Column(
         modifier = modifier
             .width(34.dp)
             .fillMaxHeight()
-            .background(MaterialTheme.colorScheme.background.copy(alpha = 0.85f))
-            .onSizeChanged { railHeight = it.height.coerceAtLeast(1) }
-            .semantics { contentDescription = "Alphabet" }
-            .pointerInput(letters) {
+            .background(MaterialTheme.colorScheme.background.copy(alpha = 0.85f)),
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(28.dp)
+                .clickable(onClick = onFavorites)
+                .semantics { contentDescription = "Favorites" },
+            contentAlignment = Alignment.Center,
+        ) {
+            Icon(
+                imageVector = Icons.Filled.Star,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.size(14.dp),
+            )
+        }
+        Box(
+            modifier = Modifier
+                .weight(1f)
+                .fillMaxWidth()
+                .onSizeChanged { railHeight = it.height.coerceAtLeast(1) }
+                .semantics { contentDescription = "Alphabet" }
+                .pointerInput(letters) {
                 awaitEachGesture {
                     val down = awaitFirstDown(requireUnconsumed = false)
 
@@ -82,8 +111,8 @@ fun AlphabetRail(
                     fingerIndex = -1
                 }
             },
-    ) {
-        Column(Modifier.fillMaxHeight()) {
+        ) {
+        Column(Modifier.fillMaxSize()) {
             letters.forEachIndexed { index, letter ->
                 val targetScale = if (fingerIndex >= 0) {
                     1f + 0.8f * exp(-0.5f * (index - fingerIndex) * (index - fingerIndex))
@@ -96,6 +125,7 @@ fun AlphabetRail(
                 Box(
                     modifier = Modifier
                         .weight(1f)
+                        .fillMaxWidth()
                         .graphicsLayer {
                             scaleX = scale
                             scaleY = scale
@@ -116,6 +146,7 @@ fun AlphabetRail(
                     )
                 }
             }
+        }
         }
     }
 }

@@ -13,6 +13,9 @@ class IconPackMapping private constructor(
         return byPackage[packageName]
     }
 
+    /** Normalised `package/activity` pairs, used for the on-disk mapping cache. */
+    fun entries(): List<Pair<String, String>> = byComponent.toList()
+
     companion object {
         fun fromItems(items: List<Pair<String, String>>): IconPackMapping {
             val byComponent = HashMap<String, String>()

@@ -17,6 +17,8 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import org.xmlpull.v1.XmlPullParser
+import java.io.File
+import java.util.Collections
 import javax.xml.parsers.DocumentBuilderFactory
 
 data class IconPackInfo(val packageName: String, val label: String)
@@ -36,6 +38,8 @@ class IconPackRepository(
     private val packUpdateTimes = HashMap<String, Long>()
     private val packContexts = HashMap<String, Context>()
     private val misses = LinkedHashSet<String>()
+    private val loadingIcons = Collections.synchronizedSet(HashSet<String>())
+    private val loadLock = Any()
     private val cache = LruCache<String, ImageBitmap>(128)
 
     private val _packs = MutableStateFlow<List<IconPackInfo>>(emptyList())
@@ -92,8 +96,21 @@ class IconPackRepository(
         return bitmapFor(packageName, drawable, sizePx, cacheKey)
     }
 
-    fun icons(packageName: String?): List<PackIcon> =
-        packageName?.let { iconsByPack[it] }.orEmpty()
+    fun icons(packageName: String?): List<PackIcon> {
+        val pack = packageName ?: return emptyList()
+        iconsByPack[pack]?.let { return it }
+        if (loadingIcons.add(pack)) {
+            scope.launch {
+                runCatching { loadIcons(pack) }.getOrNull()?.let {
+                    loadedIcons[pack] = it
+                    iconsByPack = HashMap(loadedIcons)
+                    _version.value += 1
+                }
+                loadingIcons.remove(pack)
+            }
+        }
+        return emptyList()
+    }
 
     private fun bitmapFor(pack: String, drawableName: String, sizePx: Int, cacheKey: String): ImageBitmap? {
         val result = runCatching {
@@ -121,12 +138,18 @@ class IconPackRepository(
 
     private fun load(packageName: String?) {
         if (packageName == null) return
+        synchronized(loadLock) {
+            if (loadedMappings.containsKey(packageName) && packUpdateTimes[packageName] == updateTime(packageName)) return
+            loadNow(packageName)
+        }
+    }
+
+    private fun loadNow(packageName: String) {
         val result = runCatching { loadMapping(packageName) }
         if (result.isSuccess) {
             loadedMappings[packageName] = result.getOrNull()
             packUpdateTimes[packageName] = updateTime(packageName)
         }
-        runCatching { loadIcons(packageName) }.getOrNull()?.let { loadedIcons[packageName] = it }
         mappings = HashMap(loadedMappings)
         iconsByPack = HashMap(loadedIcons)
         _version.value += 1
@@ -135,6 +158,7 @@ class IconPackRepository(
     private fun invalidate(packageName: String) {
         loadedMappings.remove(packageName)
         loadedIcons.remove(packageName)
+        loadingIcons.remove(packageName)
         packUpdateTimes.remove(packageName)
         packContexts.remove(packageName)
         mappings = HashMap(loadedMappings)
@@ -207,11 +231,28 @@ class IconPackRepository(
     }.getOrDefault(emptyList())
 
     private fun loadMapping(packageName: String): IconPackMapping? {
+        val time = updateTime(packageName)
+        val cacheFile = File(appContext.cacheDir, "iconpack-$packageName-$time.txt")
+        if (cacheFile.exists()) {
+            runCatching {
+                val raw = cacheFile.bufferedReader().useLines { lines ->
+                    val out = ArrayList<Pair<String, String>>(16000)
+                    lines.forEach { line ->
+                        val tab = line.indexOf('\t')
+                        if (tab > 0) out += line.substring(0, tab) to line.substring(tab + 1)
+                    }
+                    out
+                }
+                IconPackMapping.fromItems(raw)
+            }.getOrNull()?.let {
+                return it
+            }
+        }
         val packContext = appContext.createPackageContext(packageName, 0)
         val fromAssets = runCatching {
             packContext.assets.open("appfilter.xml").use { IconPackMapping.parse(it) }
         }.getOrNull()
-        if (fromAssets != null) return fromAssets
+        if (fromAssets != null) return cache(packageName, time, cacheFile, fromAssets)
         val id = packContext.resources.getIdentifier("appfilter", "xml", packageName)
         if (id == 0) return null
         val items = mutableListOf<Pair<String, String>>()
@@ -228,6 +269,31 @@ class IconPackRepository(
                 event = parser.next()
             }
         }
-        return IconPackMapping.fromItems(items)
+        return cache(packageName, time, cacheFile, IconPackMapping.fromItems(items))
+    }
+
+    /** Parsing a 3 MB appfilter costs seconds; the normalised pairs reload in milliseconds. */
+    private fun cache(
+        packageName: String,
+        time: Long,
+        file: File,
+        mapping: IconPackMapping,
+    ): IconPackMapping {
+        runCatching {
+            val temp = File(file.parentFile, file.name + ".tmp")
+            temp.bufferedWriter().use { writer ->
+                mapping.entries().forEach { (component, drawable) ->
+                    writer.write(component)
+                    writer.write("\t")
+                    writer.write(drawable)
+                    writer.newLine()
+                }
+            }
+            temp.renameTo(file)
+            appContext.cacheDir.listFiles { f ->
+                f.name.startsWith("iconpack-$packageName-") && f.name != file.name
+            }?.forEach { it.delete() }
+        }
+        return mapping
     }
 }

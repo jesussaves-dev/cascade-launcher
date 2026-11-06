@@ -332,6 +332,7 @@ fun HomeScreen(
                 letters = railLetters,
                 presentLetters = presentLetters,
                 active = active,
+                onFavorites = { scope.launch { listState.animateScrollToItem(0) } },
                 onSelect = { letter ->
                     jumpTarget(letter, sections, leadingItems)?.let { index ->
                         scope.launch { listState.animateScrollToItem(index) }

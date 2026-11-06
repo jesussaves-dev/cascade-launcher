@@ -90,6 +90,7 @@ class HomeActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        val keepScroll = lastNonConfigurationInstance != null
         pendingWidgetId = savedInstanceState?.getInt(
             STATE_PENDING_WIDGET,
             AppWidgetManager.INVALID_APPWIDGET_ID,
@@ -235,6 +236,9 @@ class HomeActivity : ComponentActivity() {
             }
 
             val listState = androidx.compose.foundation.lazy.rememberLazyListState()
+            LaunchedEffect(Unit) {
+                if (!keepScroll) listState.scrollToItem(0)
+            }
             CascadeTheme(mode = theme, accentIndex = accent) {
                 key(activeIconPack, packVersion, iconOverrides) {
                 when {

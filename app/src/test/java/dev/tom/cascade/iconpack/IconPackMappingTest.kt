@@ -71,4 +71,10 @@ class IconPackMappingTest {
         assertNull(parsed.drawableName("com.bar", "com.bar.Main"))
         assertEquals("ok", parsed.drawableName("com.foo", "com.foo.Main"))
     }
+
+    @Test fun `entries round trip through fromItems`() {
+        val mapping = IconPackMapping.fromItems(listOf("com.example/.Main" to "icon_a"))
+        val copy = IconPackMapping.fromItems(mapping.entries())
+        assertEquals("icon_a", copy.drawableName("com.example", "com.example.Main"))
+    }
 }
