@@ -39,6 +39,7 @@ fun AppActionSheet(
     onOpenNotification: (NotificationItem) -> Unit = {},
     onDismissNotification: (NotificationItem) -> Unit = {},
     onPinToggle: () -> Unit,
+    onAddToFolder: () -> Unit = {},
     onAppInfo: () -> Unit,
     onUninstall: () -> Unit,
     onHide: () -> Unit,
@@ -72,6 +73,7 @@ fun AppActionSheet(
                 }
                 Spacer(Modifier.height(8.dp))
             }
+            ActionRow("Add to folder", onAddToFolder)
             ActionRow(if (pinned) "Unpin from favorites" else "Pin to favorites", onPinToggle)
             ActionRow("App info", onAppInfo)
             if (removable) ActionRow("Uninstall", onUninstall)

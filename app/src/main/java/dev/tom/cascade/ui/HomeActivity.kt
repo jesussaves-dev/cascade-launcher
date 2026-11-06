@@ -16,6 +16,9 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.ui.platform.LocalDensity
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleEventEffect
@@ -71,6 +74,9 @@ class HomeActivity : ComponentActivity() {
             var openedFolder by remember { mutableStateOf<Folder?>(null) }
             var folderAction by remember { mutableStateOf<Folder?>(null) }
             var removingFromFolder by remember { mutableStateOf<Pair<Folder, AppEntry>?>(null) }
+            var folderPickerFor by remember { mutableStateOf<AppEntry?>(null) }
+            var renamingFolder by remember { mutableStateOf<Folder?>(null) }
+            var deletingFolder by remember { mutableStateOf<Folder?>(null) }
 
             LifecycleEventEffect(Lifecycle.Event.ON_RESUME) {
                 defaultLauncher = isDefaultLauncher(this@HomeActivity)
@@ -172,6 +178,86 @@ class HomeActivity : ComponentActivity() {
                     }
                 }
 
+                folderPickerFor?.let { target ->
+                    AddToFolderDialog(
+                        folders = folders,
+                        onPick = { folderId ->
+                            prefs.addToFolder(folderId, target.key)
+                            folderPickerFor = null
+                        },
+                        onCreate = { name ->
+                            prefs.createFolder(name, target.key)
+                            folderPickerFor = null
+                        },
+                        onDismiss = { folderPickerFor = null },
+                    )
+                }
+
+                folderAction?.let { folder ->
+                    FolderActionSheet(
+                        folder = folder,
+                        onRename = {
+                            folderAction = null
+                            renamingFolder = folder
+                        },
+                        onDelete = {
+                            folderAction = null
+                            deletingFolder = folder
+                        },
+                        onDismiss = { folderAction = null },
+                    )
+                }
+
+                renamingFolder?.let { folder ->
+                    NameFolderDialog(
+                        title = "Rename folder",
+                        initial = folder.name,
+                        onConfirm = { name ->
+                            prefs.renameFolder(folder.id, name)
+                            renamingFolder = null
+                        },
+                        onDismiss = { renamingFolder = null },
+                    )
+                }
+
+                deletingFolder?.let { folder ->
+                    AlertDialog(
+                        onDismissRequest = { deletingFolder = null },
+                        title = { Text("Delete folder?") },
+                        text = { Text("Apps inside return to the list.") },
+                        confirmButton = {
+                            TextButton(
+                                onClick = {
+                                    prefs.deleteFolder(folder.id)
+                                    deletingFolder = null
+                                },
+                            ) { Text("Delete") }
+                        },
+                        dismissButton = {
+                            TextButton(onClick = { deletingFolder = null }) { Text("Cancel") }
+                        },
+                    )
+                }
+
+                removingFromFolder?.let { (folder, app) ->
+                    AlertDialog(
+                        onDismissRequest = { removingFromFolder = null },
+                        title = { Text("Remove from ${folder.name}?") },
+                        text = { Text("${app.label} returns to the app list.") },
+                        confirmButton = {
+                            TextButton(
+                                onClick = {
+                                    prefs.removeFromFolder(folder.id, app.key)
+                                    removingFromFolder = null
+                                },
+                            ) { Text("Remove") }
+                        },
+                        dismissButton = {
+                            TextButton(onClick = { removingFromFolder = null }) { Text("Cancel") }
+                        },
+                    )
+                }
+
                 openedFolder?.let { folder ->
                     FolderSheet(
                         folder = folder,
@@ -213,6 +299,10 @@ class HomeActivity : ComponentActivity() {
                                 ).show()
                             }
                             selected = null
+                        },
+                        onAddToFolder = {
+                            selected = null
+                            folderPickerFor = app
                         },
                         onAppInfo = {
                             selected = null
