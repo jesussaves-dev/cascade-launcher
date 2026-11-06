@@ -186,6 +186,7 @@ class HomeActivity : ComponentActivity() {
                     contactsRepo.refresh()
                 } else if (prefs.searchContacts.value) {
                     prefs.setSearchContacts(false)
+                    contactsRepo.clear()
                 }
             }
 
@@ -248,6 +249,7 @@ class HomeActivity : ComponentActivity() {
                             onSearchContacts = { enabled ->
                                 if (!enabled) {
                                     prefs.setSearchContacts(false)
+                                    contactsRepo.clear()
                                 } else if (contactsGranted) {
                                     prefs.setSearchContacts(true)
                                     contactsRepo.refresh()
@@ -273,10 +275,16 @@ class HomeActivity : ComponentActivity() {
                             contacts = if (searchContacts && contactsGranted) contactList else emptyList(),
                             onOpenContact = { contact ->
                                 searching = false
-                                runCatching {
-                                    startActivity(
-                                        Intent(Intent.ACTION_DIAL, Uri.parse("tel:${Uri.encode(contact.number)}")),
-                                    )
+                                val intent = Intent(
+                                    Intent.ACTION_DIAL,
+                                    Uri.fromParts("tel", contact.number, null),
+                                )
+                                runCatching { startActivity(intent) }.onFailure {
+                                    Toast.makeText(
+                                        this@HomeActivity,
+                                        "No dialer available",
+                                        Toast.LENGTH_SHORT,
+                                    ).show()
                                 }
                             },
                             onWebSearch = { query ->
@@ -529,6 +537,8 @@ class HomeActivity : ComponentActivity() {
             startActivity(
                 Intent(Intent.ACTION_VIEW, Uri.parse("https://duckduckgo.com/?q=${Uri.encode(query)}")),
             )
+        }.onFailure {
+            Toast.makeText(this, "No browser available", Toast.LENGTH_SHORT).show()
         }
     }
 

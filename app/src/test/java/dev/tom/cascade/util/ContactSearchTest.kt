@@ -26,4 +26,10 @@ class ContactSearchTest {
         assertEquals(5, searchContacts(list, "ann").size)
         assertEquals(emptyList<Contact>(), searchContacts(list, "  "))
     }
+
+    @Test fun `one row per contact even with several numbers`() {
+        val list = listOf(c(1, "Dad", "111"), c(1, "Dad", "222"), c(2, "Ann", "333"))
+        assertEquals(listOf("Dad", "Ann"), uniqueContacts(list).map { it.name })
+        assertEquals("111", uniqueContacts(list).first().number)
+    }
 }

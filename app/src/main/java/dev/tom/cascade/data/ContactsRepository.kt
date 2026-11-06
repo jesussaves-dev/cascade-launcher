@@ -3,6 +3,7 @@ package dev.tom.cascade.data
 import android.content.Context
 import android.provider.ContactsContract.CommonDataKinds.Phone
 import dev.tom.cascade.model.Contact
+import dev.tom.cascade.util.uniqueContacts
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -17,9 +18,21 @@ class ContactsRepository(private val context: Context) {
     private val _contacts = MutableStateFlow<List<Contact>>(emptyList())
     val contacts: StateFlow<List<Contact>> = _contacts.asStateFlow()
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+    private val loading = java.util.concurrent.atomic.AtomicBoolean(false)
 
     fun refresh() {
-        scope.launch { load() }
+        if (!loading.compareAndSet(false, true)) return
+        scope.launch {
+            try {
+                load()
+            } finally {
+                loading.set(false)
+            }
+        }
+    }
+
+    fun clear() {
+        _contacts.value = emptyList()
     }
 
     private suspend fun load() = withContext(Dispatchers.IO) {
@@ -39,6 +52,6 @@ class ContactsRepository(private val context: Context) {
             }
         }
         val collator = Collator.getInstance()
-        _contacts.value = found.sortedWith { a, b -> collator.compare(a.name, b.name) }
+        _contacts.value = uniqueContacts(found.toList()).sortedWith { a, b -> collator.compare(a.name, b.name) }
     }
 }

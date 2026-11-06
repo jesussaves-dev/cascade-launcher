@@ -32,6 +32,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import dev.tom.cascade.model.AppEntry
@@ -76,7 +78,7 @@ fun SearchOverlay(
                     modifier = Modifier
                         .weight(1f)
                         .focusRequester(focusRequester),
-                    placeholder = { Text("Search apps") },
+                    placeholder = { Text("Search apps and contacts") },
                     singleLine = true,
                     keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
                     keyboardActions = KeyboardActions(
@@ -87,14 +89,14 @@ fun SearchOverlay(
             }
 
             if (results.isEmpty() && contactResults.isEmpty() && query.isBlank()) {
-                Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                Box(Modifier.fillMaxWidth().weight(1f), contentAlignment = Alignment.Center) {
                     Text(
                         text = "No apps found",
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 }
             } else {
-                LazyColumn(modifier = Modifier.fillMaxSize()) {
+                LazyColumn(modifier = Modifier.fillMaxWidth().weight(1f)) {
                     items(results, key = { it.key }) { app ->
                         AppRow(
                             app = app,
@@ -114,11 +116,12 @@ fun SearchOverlay(
                                 modifier = Modifier.padding(horizontal = 20.dp, vertical = 8.dp),
                             )
                         }
-                        items(contactResults, key = { "contact:${it.key}:${it.number}" }) { contact ->
+                        items(contactResults, key = { "contact:${it.key}" }) { contact ->
                             Column(
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .clickable { onOpenContact(contact) }
+                                    .semantics(mergeDescendants = true) {}
+                                    .clickable(role = Role.Button) { onOpenContact(contact) }
                                     .padding(horizontal = 20.dp, vertical = 8.dp),
                             ) {
                                 Text(text = contact.name, maxLines = 1)
@@ -131,18 +134,17 @@ fun SearchOverlay(
                             }
                         }
                     }
-                    if (query.isNotBlank()) {
-                        item(key = "web-search") {
-                            Text(
-                                text = "Search the web for \u201C$query\u201D",
-                                color = MaterialTheme.colorScheme.primary,
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .clickable { onWebSearch(query) }
-                                    .padding(horizontal = 20.dp, vertical = 16.dp),
-                            )
-                        }
-                    }
+                }
+                if (query.isNotBlank()) {
+                    Text(
+                        text = "Search the web for \u201C$query\u201D",
+                        color = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .semantics(mergeDescendants = true) {}
+                            .clickable(role = Role.Button) { onWebSearch(query) }
+                            .padding(horizontal = 20.dp, vertical = 16.dp),
+                    )
                 }
             }
         }
