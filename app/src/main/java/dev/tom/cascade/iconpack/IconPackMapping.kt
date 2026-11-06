@@ -31,6 +31,7 @@ class IconPackMapping private constructor(
             runCatching { factory.setFeature("http://apache.org/xml/features/disallow-doctype-decl", true) }
             runCatching { factory.setFeature("http://xml.org/sax/features/external-general-entities", false) }
             runCatching { factory.setFeature("http://xml.org/sax/features/external-parameter-entities", false) }
+            runCatching { factory.setFeature(javax.xml.XMLConstants.FEATURE_SECURE_PROCESSING, true) }
             factory.isExpandEntityReferences = false
             val document = factory.newDocumentBuilder().parse(input)
             val nodes = document.getElementsByTagName("item")

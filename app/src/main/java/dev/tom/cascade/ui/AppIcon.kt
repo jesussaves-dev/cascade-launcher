@@ -23,7 +23,13 @@ fun AppIcon(
     sizeDp: Int,
     modifier: Modifier = Modifier,
 ) {
-    val shape = RoundedCornerShape((sizeDp / 4).coerceIn(4, 16).dp)
+    val shape = RoundedCornerShape(
+        when {
+            sizeDp >= 48 -> 16
+            sizeDp >= 32 -> 12
+            else -> 4
+        }.dp,
+    )
     if (icon != null) {
         Image(
             bitmap = icon,
@@ -40,7 +46,9 @@ fun AppIcon(
             contentAlignment = Alignment.Center,
         ) {
             Text(
-                text = label.trim().take(1).uppercase().ifEmpty { "?" },
+                text = label.trim().let { trimmed ->
+                    if (trimmed.isEmpty()) "?" else String(Character.toChars(trimmed.codePointAt(0)))
+                }.uppercase(),
                 style = if (sizeDp >= 40) {
                     MaterialTheme.typography.titleMedium
                 } else {

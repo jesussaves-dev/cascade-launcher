@@ -56,4 +56,19 @@ class IconPackMappingTest {
     @Test fun `unknown package returns null`() {
         assertNull(mapping("com.foo/com.foo.Main" to "foo_icon").drawableName("com.other", "com.other.Main"))
     }
+
+    @Test fun `records without component or drawable are skipped`() {
+        val parsed = parse(
+            """
+            <resources>
+              <item drawable="no_component" />
+              <item component="com.foo/com.foo.Main" />
+              <item component="" drawable="blank_component" />
+              <item component="com.foo/com.foo.Main" drawable="ok" />
+            </resources>
+            """.trimIndent(),
+        )
+        assertNull(parsed.drawableName("com.bar", "com.bar.Main"))
+        assertEquals("ok", parsed.drawableName("com.foo", "com.foo.Main"))
+    }
 }
