@@ -1,7 +1,7 @@
 # Cascade
 
 A small, open-source Android home-screen launcher: one vertical alphabetical
-list of your apps, favourites pinned on top, and search the moment you need it.
+list of your apps, favourites pinned above it, and search the moment you need it.
 No accounts, no ads, no paywalls, no network permission.
 
 Cascade is an independent project inspired by the *workflow* of Niagara
@@ -11,7 +11,7 @@ any third-party launcher.
 ## Features
 
 - Vertical A–Z app list with sticky letter headers and a `#` bucket
-- Favourites row: long-press any app and pin it, up to eight apps
+- Favourites: long-press any app and pin it; no limit, shown as full rows above the A–Z list
   (two columns on tablets and foldables)
 - Wave alphabet rail on the right: drag to jump, empty letters are dimmed
 - Configurable bottom button: tap and swipe-up each run Search, the voice
