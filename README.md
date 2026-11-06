@@ -11,8 +11,13 @@ any third-party launcher.
 ## Features
 
 - Vertical A–Z app list with sticky letter headers and a `#` bucket
-- Favourites row: long-press any app and pin it
-- Instant search: tap the search field or pull down past the top of the list
+- Favourites row: long-press any app and pin it, up to eight apps
+  (two columns on tablets and foldables)
+- Wave alphabet rail on the right: drag to jump, empty letters are dimmed
+- Configurable bottom button: tap and swipe-up each run Search, the voice
+  assistant, or any app you choose
+- Instant search: tap the search field, pull down past the top of the list,
+  or tap the bottom button
 - Long-press actions: pin/unpin, app info, uninstall (user apps only), hide
 - Hidden app management in settings
 - Light, dark or system theme, six accent colours, adjustable icon size

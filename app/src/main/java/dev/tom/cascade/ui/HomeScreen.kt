@@ -107,8 +107,8 @@ fun HomeScreen(
     ) {
         Box(
             modifier = Modifier
-                .fillMaxSize()
                 .widthIn(max = 640.dp)
+                .fillMaxSize()
                 .align(Alignment.TopCenter),
         ) {
     Column(modifier = Modifier.fillMaxSize().padding(end = 30.dp)) {
@@ -210,7 +210,6 @@ fun HomeScreen(
             }
         }
             }
-        }
         CascadeButton(
             onTap = onButtonTap,
             onSwipeUp = onButtonSwipeUp,
@@ -234,6 +233,7 @@ fun HomeScreen(
                 },
                 modifier = Modifier.align(Alignment.CenterEnd),
             )
+        }
         }
     }
 }
