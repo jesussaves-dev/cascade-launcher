@@ -2,6 +2,7 @@ package dev.tom.cascade.util
 
 import android.app.admin.DevicePolicyManager
 import android.content.ComponentName
+import android.app.Activity
 import android.content.Context
 import android.content.Intent
 import dev.tom.cascade.admin.CascadeDeviceAdmin
@@ -18,7 +19,8 @@ fun requestDeviceAdmin(context: Context) {
             DevicePolicyManager.EXTRA_ADD_EXPLANATION,
             "Lets Cascade lock the screen when you double-tap the clock.",
         )
-        .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+    // DeviceAdminAdd refuses NEW_TASK, so only add it when no Activity is available.
+    if (context !is Activity) intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
     runCatching { context.startActivity(intent) }
 }
 

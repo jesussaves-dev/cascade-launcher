@@ -87,6 +87,8 @@ fun SettingsScreen(
     showVerse: Boolean,
     onShowVerse: (Boolean) -> Unit,
     onSearchPlaces: suspend (String) -> List<Place>,
+    adminActive: Boolean,
+    onToggleAdmin: () -> Unit,
     onTheme: (ThemeMode) -> Unit,
     onAccent: (Int) -> Unit,
     onIconSize: (Int) -> Unit,
@@ -240,6 +242,23 @@ fun SettingsScreen(
                     )
                 }
                 Switch(checked = showVerse, onCheckedChange = onShowVerse)
+            }
+
+            HorizontalDivider(Modifier.padding(vertical = 16.dp))
+            SectionTitle("Gestures")
+            Row(
+                modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Column(modifier = Modifier.weight(1f)) {
+                    Text("Double-tap the clock to lock")
+                    Text(
+                        text = "Needs device admin",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+                Switch(checked = adminActive, onCheckedChange = { onToggleAdmin() })
             }
 
             HorizontalDivider(Modifier.padding(vertical = 16.dp))

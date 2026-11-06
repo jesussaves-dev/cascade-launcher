@@ -49,6 +49,7 @@ import dev.tom.cascade.util.favoriteApps
 import dev.tom.cascade.util.folderApps
 import dev.tom.cascade.util.isDefaultLauncher
 import dev.tom.cascade.util.isDeviceAdminActive
+import dev.tom.cascade.util.requestDeviceAdmin
 import dev.tom.cascade.util.lockDevice
 import dev.tom.cascade.util.isNotificationListenerEnabled
 import dev.tom.cascade.util.openDefaultLauncherSettings
@@ -283,6 +284,8 @@ class HomeActivity : ComponentActivity() {
                             showVerse = showVerse,
                             onShowVerse = prefs::setShowVerse,
                             onSearchPlaces = weatherRepository::searchPlaces,
+                            adminActive = adminActive,
+                            onToggleAdmin = { requestDeviceAdmin(this@HomeActivity) },
                             onTheme = prefs::setTheme,
                             onAccent = prefs::setAccent,
                             onIconSize = prefs::setIconSize,

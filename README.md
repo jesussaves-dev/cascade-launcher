@@ -32,6 +32,8 @@ any third-party launcher.
   verse underneath
 - App widgets hosted under the clock; add or remove them in settings
 - Light, dark or system theme, six accent colours, adjustable icon size
+- Wallpaper behind a readable scrim, long-press the clock to change it
+- Double-tap the clock to lock the screen (needs the optional device admin)
 - Works as the system default launcher
 
 Not included (deliberately): notification history or replies,
@@ -119,6 +121,20 @@ widget appears under the clock, above favourites. **Remove** takes it off
 again and releases its binding. Widget ids are stored locally, and a widget
 whose app is uninstalled disappears. Widgets are not resized or reordered in
 this version.
+
+## Wallpaper and gestures
+
+Cascade shows your system wallpaper with one dim layer over it, so app names
+stay readable on bright photos in both themes.
+
+- **Long-press the clock** to open the system wallpaper picker.
+- **Double-tap the clock** to lock the screen. This is off until you switch on
+  Settings → Gestures → Double-tap the clock to lock and confirm the system
+  device-admin screen. The admin declares the force-lock policy only; it cannot
+  erase, set passwords or watch anything. Turn it off from the same Settings row
+  or from Android's device-admin settings, and the switch follows.
+
+The gestures live on the clock because the app list takes every other touch.
 
 ## Search
 
