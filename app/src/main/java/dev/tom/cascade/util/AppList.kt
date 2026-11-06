@@ -7,6 +7,15 @@ import java.util.Locale
 
 data class AppSection(val header: String, val apps: List<AppEntry>)
 
+const val MAX_FAVORITES = 8
+
+fun canFavorite(
+    favoriteKeys: List<String>,
+    key: String,
+    installedFavoriteCount: Int,
+    limit: Int = MAX_FAVORITES,
+): Boolean = key in favoriteKeys || installedFavoriteCount < limit
+
 fun sortApps(apps: List<AppEntry>, collator: Collator = Collator.getInstance()): List<AppEntry> =
     apps.sortedWith { a, b -> collator.compare(a.label, b.label) }
 
