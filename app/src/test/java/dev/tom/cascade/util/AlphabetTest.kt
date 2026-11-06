@@ -41,6 +41,12 @@ class AlphabetTest {
         assertNull(activeLetter(99, sections))
     }
 
+    @Test fun `accented headers map to their base rail letter`() {
+        assertEquals("E", railLetterFor("É"))
+        assertEquals("#", railLetterFor("#"))
+        assertNull(railLetterFor("Я"))
+    }
+
     @Test fun `rail has 26 letters and hash`() {
         assertEquals(27, railLetters.size)
         assertEquals("#", railLetters.last())
