@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -77,6 +78,7 @@ fun HomeScreen(
     folderContents: Map<String, List<AppEntry>> = emptyMap(),
     onFolderOpen: (Folder) -> Unit = {},
     onFolderLongPress: (Folder) -> Unit = {},
+    listState: LazyListState = rememberLazyListState(),
 ) {
     val openSearch by rememberUpdatedState(onOpenSearch)
     val threshold = with(LocalDensity.current) { 48.dp.toPx() }
@@ -103,7 +105,6 @@ fun HomeScreen(
             }
         }
     }
-    val listState = rememberLazyListState()
     val scope = rememberCoroutineScope()
     Box(
         modifier = Modifier

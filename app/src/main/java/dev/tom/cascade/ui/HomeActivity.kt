@@ -28,6 +28,7 @@ import dev.tom.cascade.CascadeApp
 import dev.tom.cascade.data.ButtonAction
 import dev.tom.cascade.model.AppEntry
 import dev.tom.cascade.model.Folder
+import dev.tom.cascade.iconpack.overrideDrawable
 import dev.tom.cascade.notifications.NotificationStore
 import dev.tom.cascade.ui.theme.CascadeTheme
 import dev.tom.cascade.util.canFavorite
@@ -69,10 +70,9 @@ class HomeActivity : ComponentActivity() {
             val density = LocalDensity.current.density
             val iconPx = (iconSizeDp * density).toInt()
             val iconFor: (AppEntry) -> androidx.compose.ui.graphics.ImageBitmap? = { app ->
-                val override = iconOverrides[app.key]
-                val pack = activeIconPack
-                (if (override != null && pack != null) {
-                    iconPacks.iconByDrawable(pack, override, iconPx)
+                val override = overrideDrawable(iconOverrides, app.key, activeIconPack)
+                (if (override != null) {
+                    iconPacks.iconByDrawable(activeIconPack!!, override, iconPx)
                 } else {
                     null
                 }) ?: iconPacks.icon(app, iconPx) ?: repo.icon(app, iconPx)
@@ -127,6 +127,7 @@ class HomeActivity : ComponentActivity() {
                 }
             }
 
+            val listState = androidx.compose.foundation.lazy.rememberLazyListState()
             CascadeTheme(mode = theme, accentIndex = accent) {
                 key(activeIconPack, packVersion, iconOverrides) {
                 when {
@@ -195,6 +196,7 @@ class HomeActivity : ComponentActivity() {
                             folderContents = folderContents,
                             onFolderOpen = { openedFolder = it },
                             onFolderLongPress = { folderAction = it },
+                            listState = listState,
                         )
                     }
                 }
