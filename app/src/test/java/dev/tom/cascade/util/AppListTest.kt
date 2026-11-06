@@ -2,8 +2,6 @@ package dev.tom.cascade.util
 
 import dev.tom.cascade.model.AppEntry
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertFalse
-import org.junit.Assert.assertTrue
 import org.junit.Test
 import java.text.Collator
 import java.util.Locale
@@ -58,16 +56,10 @@ class AppListTest {
         assertEquals(listOf("Google Maps", "Maps"), searchApps(entries, "maps", emptySet(), collator).map { it.label })
     }
 
-    @Test fun `cap refuses a ninth installed favorite`() {
-        val keys = (1..8).map { "p$it/.Main" }
-        assertFalse(canFavorite(keys, "p9/.Main", installedFavoriteCount = 8))
-        assertTrue(canFavorite(keys, "p1/.Main", installedFavoriteCount = 8))
-        assertTrue(canFavorite(keys, "p9/.Main", installedFavoriteCount = 7))
-    }
-
-    @Test fun `stale favorites do not count toward the cap`() {
-        val keys = (1..8).map { "gone$it/.Main" }
-        assertTrue(canFavorite(keys, "p9/.Main", installedFavoriteCount = 0))
+    @Test fun `all pinned keys come back in pin order`() {
+        val entries = (1..20).map { app("App$it", "p$it") }
+        val keys = entries.map { it.key }
+        assertEquals(keys, favoriteApps(entries, keys, emptySet()).map { it.key })
     }
 
     @Test fun `headers follow locale collation`() {

@@ -43,7 +43,6 @@ import dev.tom.cascade.model.Folder
 import dev.tom.cascade.iconpack.overrideDrawable
 import dev.tom.cascade.notifications.NotificationStore
 import dev.tom.cascade.ui.theme.CascadeTheme
-import dev.tom.cascade.util.canFavorite
 import dev.tom.cascade.util.favoriteApps
 import dev.tom.cascade.util.folderApps
 import dev.tom.cascade.util.isDefaultLauncher
@@ -204,9 +203,6 @@ class HomeActivity : ComponentActivity() {
             }
             val visibleApps = remember(allApps, hidden) {
                 allApps.filterNot { it.key in hidden }
-            }
-            val installedFavoriteCount = remember(allApps, favoriteKeys) {
-                allApps.count { it.key in favoriteKeys }
             }
 
             fun runAction(action: ButtonAction) {
@@ -438,15 +434,7 @@ class HomeActivity : ComponentActivity() {
                         },
                         onDismissNotification = { NotificationStore.dismiss(it.key) },
                         onPinToggle = {
-                            if (canFavorite(favoriteKeys, app.key, installedFavoriteCount)) {
-                                prefs.toggleFavorite(app.key)
-                            } else {
-                                Toast.makeText(
-                                    this@HomeActivity,
-                                    "Favourites are full — unpin one first",
-                                    Toast.LENGTH_SHORT,
-                                ).show()
-                            }
+                            prefs.toggleFavorite(app.key)
                             selected = null
                         },
                         onAddToFolder = {
