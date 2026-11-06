@@ -4,8 +4,9 @@ A small, open-source Android home-screen launcher: one vertical alphabetical
 list of your apps, favourites pinned on top, and search the moment you need it.
 No accounts, no ads, no paywalls, no network permission.
 
-Cascade is an independent project. It contains no code, assets, strings or
-resources from any third-party launcher.
+Cascade is an independent project inspired by the *workflow* of Niagara
+Launcher. It contains no code, assets, strings, source files or resources from
+any third-party launcher.
 
 ## Features
 
