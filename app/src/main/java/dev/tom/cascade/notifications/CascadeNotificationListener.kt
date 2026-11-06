@@ -28,7 +28,7 @@ class CascadeNotificationListener : NotificationListenerService() {
     private fun toItem(sbn: StatusBarNotification): NotificationItem? {
         val notification = sbn.notification
         val flags = notification.flags
-        if (flags and Notification.FLAG_GROUP_SUMMARY != 0) return null
+        if (isGroupSummary(flags)) return null
 
         val extras = notification.extras
         val title = extras.getCharSequence(Notification.EXTRA_TITLE)
@@ -44,7 +44,7 @@ class CascadeNotificationListener : NotificationListenerService() {
             .firstOrNull { it.isNotEmpty() }
             .orEmpty()
 
-        val ongoing = flags and (Notification.FLAG_ONGOING_EVENT or Notification.FLAG_FOREGROUND_SERVICE) != 0
+        val ongoing = isOngoing(flags)
         return NotificationItem(
             key = sbn.key,
             packageName = sbn.packageName,
@@ -52,7 +52,7 @@ class CascadeNotificationListener : NotificationListenerService() {
             text = text,
             timeMillis = sbn.postTime,
             ongoing = ongoing,
-            dismissible = !ongoing && flags and Notification.FLAG_NO_CLEAR == 0,
+            dismissible = isDismissible(flags),
             contentIntent = notification.contentIntent,
         )
     }

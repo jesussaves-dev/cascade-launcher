@@ -2,6 +2,8 @@ package dev.tom.cascade.ui
 
 import android.text.format.DateUtils
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -43,7 +45,11 @@ fun AppActionSheet(
     onDismiss: () -> Unit,
 ) {
     ModalBottomSheet(onDismissRequest = onDismiss) {
-        Column(modifier = Modifier.navigationBarsPadding()) {
+        Column(
+            modifier = Modifier
+                .verticalScroll(rememberScrollState())
+                .navigationBarsPadding(),
+        ) {
             Text(
                 text = app.label,
                 style = MaterialTheme.typography.titleMedium,
@@ -98,7 +104,7 @@ private fun NotificationRow(
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
             )
-            if (showPreview) {
+            if (showPreview && notification.text.isNotBlank()) {
                 Text(
                     text = notification.text,
                     style = MaterialTheme.typography.bodyMedium,

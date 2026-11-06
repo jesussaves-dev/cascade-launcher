@@ -52,7 +52,7 @@ object NotificationStore {
     }
 
     fun dismiss(key: String) {
-        dismisser?.invoke(key)
+        runCatching { dismisser?.invoke(key) }
         remove(key)
     }
 
