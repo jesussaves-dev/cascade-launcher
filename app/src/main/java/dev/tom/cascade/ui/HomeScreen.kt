@@ -71,6 +71,7 @@ fun HomeScreen(
     onButtonSwipeUp: () -> Unit,
     iconFor: (AppEntry) -> ImageBitmap?,
     iconSizeDp: Int,
+    notifiedPackages: Set<String> = emptySet(),
 ) {
     val openSearch by rememberUpdatedState(onOpenSearch)
     val threshold = with(LocalDensity.current) { 48.dp.toPx() }
@@ -170,6 +171,7 @@ fun HomeScreen(
             wide = LocalConfiguration.current.let {
                 it.screenWidthDp >= 600 && it.screenHeightDp >= 600
             },
+            notifiedPackages = notifiedPackages,
             iconFor = iconFor,
             onLaunch = onLaunch,
             onLongPress = onLongPress,
@@ -204,6 +206,7 @@ fun HomeScreen(
                             app = app,
                             icon = remember(app.key, iconSizeDp) { iconFor(app) },
                             iconSizeDp = iconSizeDp,
+                            hasNotification = app.packageName in notifiedPackages,
                             onClick = { onLaunch(app) },
                             onLongClick = { onLongPress(app) },
                         )

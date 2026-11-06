@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -33,6 +34,7 @@ import dev.tom.cascade.model.AppEntry
 fun FavoriteGrid(
     favorites: List<AppEntry>,
     wide: Boolean,
+    notifiedPackages: Set<String>,
     iconFor: (AppEntry) -> ImageBitmap?,
     onLaunch: (AppEntry) -> Unit,
     onLongPress: (AppEntry) -> Unit,
@@ -47,6 +49,7 @@ fun FavoriteGrid(
                 FavoriteTile(
                     app = app,
                     icon = remember(app.key) { iconFor(app) },
+                    notified = app.packageName in notifiedPackages,
                     onClick = { onLaunch(app) },
                     onLongClick = { onLongPress(app) },
                 )
@@ -63,6 +66,7 @@ fun FavoriteGrid(
                         FavoriteRow(
                             app = app,
                             icon = remember(app.key) { iconFor(app) },
+                            notified = app.packageName in notifiedPackages,
                             onClick = { onLaunch(app) },
                             onLongClick = { onLongPress(app) },
                             modifier = Modifier.weight(1f),
@@ -80,6 +84,7 @@ fun FavoriteGrid(
 private fun FavoriteRow(
     app: AppEntry,
     icon: ImageBitmap?,
+    notified: Boolean,
     onClick: () -> Unit,
     onLongClick: () -> Unit,
     modifier: Modifier = Modifier,
@@ -88,7 +93,7 @@ private fun FavoriteRow(
         modifier = modifier.combinedClickable(onClick = onClick, onLongClick = onLongClick),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        AppIcon(icon = icon, sizeDp = 48)
+        FavoriteIcon(icon = icon, sizeDp = 48, notified = notified)
         Spacer(Modifier.width(12.dp))
         Text(
             text = app.label,
@@ -104,6 +109,7 @@ private fun FavoriteRow(
 private fun FavoriteTile(
     app: AppEntry,
     icon: ImageBitmap?,
+    notified: Boolean,
     onClick: () -> Unit,
     onLongClick: () -> Unit,
 ) {
@@ -113,7 +119,7 @@ private fun FavoriteTile(
             .combinedClickable(onClick = onClick, onLongClick = onLongClick),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        AppIcon(icon = icon, sizeDp = 56)
+        FavoriteIcon(icon = icon, sizeDp = 56, notified = notified)
         Spacer(Modifier.padding(top = 4.dp))
         Text(
             text = app.label,
@@ -125,19 +131,31 @@ private fun FavoriteTile(
 }
 
 @Composable
-private fun AppIcon(icon: ImageBitmap?, sizeDp: Int) {
-    if (icon != null) {
-        Image(
-            bitmap = icon,
-            contentDescription = null,
-            modifier = Modifier.size(sizeDp.dp).clip(RoundedCornerShape(16.dp)),
-        )
-    } else {
-        Box(
-            modifier = Modifier
-                .size(sizeDp.dp)
-                .clip(RoundedCornerShape(16.dp))
-                .background(MaterialTheme.colorScheme.surfaceVariant),
-        )
+private fun FavoriteIcon(icon: ImageBitmap?, sizeDp: Int, notified: Boolean) {
+    Box {
+        if (icon != null) {
+            Image(
+                bitmap = icon,
+                contentDescription = null,
+                modifier = Modifier.size(sizeDp.dp).clip(RoundedCornerShape(16.dp)),
+            )
+        } else {
+            Box(
+                modifier = Modifier
+                    .size(sizeDp.dp)
+                    .clip(RoundedCornerShape(16.dp))
+                    .background(MaterialTheme.colorScheme.surfaceVariant),
+            )
+        }
+        if (notified) {
+            Box(
+                modifier = Modifier
+                    .align(Alignment.TopEnd)
+                    .size(10.dp)
+                    .background(MaterialTheme.colorScheme.background, CircleShape)
+                    .padding(2.dp)
+                    .background(MaterialTheme.colorScheme.primary, CircleShape),
+            )
+        }
     }
 }

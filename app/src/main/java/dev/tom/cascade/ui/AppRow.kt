@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -30,6 +31,7 @@ fun AppRow(
     app: AppEntry,
     icon: ImageBitmap?,
     iconSizeDp: Int,
+    hasNotification: Boolean,
     onClick: () -> Unit,
     onLongClick: () -> Unit,
 ) {
@@ -63,6 +65,15 @@ fun AppRow(
             style = MaterialTheme.typography.bodyLarge,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
+            modifier = Modifier.weight(1f),
         )
+        if (hasNotification) {
+            Box(
+                modifier = Modifier
+                    .padding(start = 8.dp)
+                    .size(6.dp)
+                    .background(MaterialTheme.colorScheme.primary, CircleShape),
+            )
+        }
     }
 }

@@ -93,6 +93,7 @@ fun SearchOverlay(
                             app = app,
                             icon = remember(app.key, iconSizeDp) { iconFor(app) },
                             iconSizeDp = iconSizeDp,
+                            hasNotification = false,
                             onClick = { onLaunch(app) },
                             onLongClick = {},
                         )
