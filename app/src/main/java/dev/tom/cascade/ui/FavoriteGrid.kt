@@ -93,7 +93,7 @@ private fun FavoriteRow(
         modifier = modifier.combinedClickable(onClick = onClick, onLongClick = onLongClick),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        FavoriteIcon(icon = icon, sizeDp = 48, notified = notified)
+        FavoriteIcon(icon = icon, label = app.label, sizeDp = 48, notified = notified)
         Spacer(Modifier.width(12.dp))
         Text(
             text = app.label,
@@ -119,7 +119,7 @@ private fun FavoriteTile(
             .combinedClickable(onClick = onClick, onLongClick = onLongClick),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        FavoriteIcon(icon = icon, sizeDp = 56, notified = notified)
+        FavoriteIcon(icon = icon, label = app.label, sizeDp = 56, notified = notified)
         Spacer(Modifier.padding(top = 4.dp))
         Text(
             text = app.label,
@@ -131,22 +131,9 @@ private fun FavoriteTile(
 }
 
 @Composable
-private fun FavoriteIcon(icon: ImageBitmap?, sizeDp: Int, notified: Boolean) {
+private fun FavoriteIcon(icon: ImageBitmap?, label: String, sizeDp: Int, notified: Boolean) {
     Box {
-        if (icon != null) {
-            Image(
-                bitmap = icon,
-                contentDescription = null,
-                modifier = Modifier.size(sizeDp.dp).clip(RoundedCornerShape(16.dp)),
-            )
-        } else {
-            Box(
-                modifier = Modifier
-                    .size(sizeDp.dp)
-                    .clip(RoundedCornerShape(16.dp))
-                    .background(MaterialTheme.colorScheme.surfaceVariant),
-            )
-        }
+        AppIcon(icon = icon, label = label, sizeDp = sizeDp)
         if (notified) {
             Box(
                 modifier = Modifier

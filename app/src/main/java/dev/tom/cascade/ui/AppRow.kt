@@ -42,23 +42,7 @@ fun AppRow(
             .padding(horizontal = 20.dp, vertical = 8.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        if (icon != null) {
-            Image(
-                bitmap = icon,
-                contentDescription = null,
-                contentScale = ContentScale.Fit,
-                modifier = Modifier
-                    .size(iconSizeDp.dp)
-                    .clip(RoundedCornerShape(12.dp)),
-            )
-        } else {
-            Box(
-                modifier = Modifier
-                    .size(iconSizeDp.dp)
-                    .clip(RoundedCornerShape(12.dp))
-                    .background(MaterialTheme.colorScheme.surfaceVariant),
-            )
-        }
+        AppIcon(icon = icon, label = app.label, sizeDp = iconSizeDp)
         Spacer(Modifier.width(16.dp))
         Text(
             text = app.label,

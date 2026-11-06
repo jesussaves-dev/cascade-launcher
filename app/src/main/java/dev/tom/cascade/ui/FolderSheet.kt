@@ -90,20 +90,7 @@ private fun FolderApp(
             .padding(vertical = 4.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        if (icon != null) {
-            Image(
-                bitmap = icon,
-                contentDescription = null,
-                modifier = Modifier.size(56.dp).clip(RoundedCornerShape(16.dp)),
-            )
-        } else {
-            Box(
-                Modifier
-                    .size(56.dp)
-                    .clip(RoundedCornerShape(16.dp))
-                    .background(MaterialTheme.colorScheme.surfaceVariant),
-            )
-        }
+        AppIcon(icon = icon, label = app.label, sizeDp = 56)
         Text(
             text = app.label,
             style = MaterialTheme.typography.labelMedium,

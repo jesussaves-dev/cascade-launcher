@@ -76,20 +76,7 @@ private fun FolderPreview(apps: List<AppEntry>, iconFor: (AppEntry) -> ImageBitm
                     Row(horizontalArrangement = Arrangement.spacedBy(2.dp)) {
                         rowApps.forEach { app ->
                             val icon = remember(app.key) { iconFor(app) }
-                            if (icon != null) {
-                                Image(
-                                    bitmap = icon,
-                                    contentDescription = null,
-                                    modifier = Modifier.size(16.dp).clip(RoundedCornerShape(4.dp)),
-                                )
-                            } else {
-                                Box(
-                                    Modifier
-                                        .size(16.dp)
-                                        .clip(RoundedCornerShape(4.dp))
-                                        .background(MaterialTheme.colorScheme.surface),
-                                )
-                            }
+                            AppIcon(icon = icon, label = app.label, sizeDp = 16)
                         }
                     }
                 }
