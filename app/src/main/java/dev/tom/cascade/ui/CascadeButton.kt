@@ -15,7 +15,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.semantics.CustomAccessibilityAction
 import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.customActions
+import androidx.compose.ui.semantics.onClick
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 
@@ -30,7 +33,19 @@ fun CascadeButton(
     Surface(
         modifier = modifier
             .size(64.dp)
-            .semantics { contentDescription = "Cascade button" }
+            .semantics {
+                contentDescription = "Cascade button"
+                onClick(label = "Run tap action") {
+                    onTap()
+                    true
+                }
+                customActions = listOf(
+                    CustomAccessibilityAction("Run swipe action") {
+                        onSwipeUp()
+                        true
+                    },
+                )
+            }
             .pointerInput(Unit) {
                 awaitEachGesture {
                     val down = awaitFirstDown()

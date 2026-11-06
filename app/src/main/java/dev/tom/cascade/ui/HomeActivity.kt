@@ -183,7 +183,12 @@ class HomeActivity : ComponentActivity() {
             component = ComponentName(app.packageName, app.activityName)
             addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_RESET_TASK_IF_NEEDED)
         }
-        startActivity(intent)
+        try {
+            startActivity(intent)
+        } catch (_: ActivityNotFoundException) {
+            (application as CascadeApp).apps.refresh()
+            Toast.makeText(this, "${app.label} is not installed", Toast.LENGTH_SHORT).show()
+        }
     }
 
     private fun openAppInfo(app: AppEntry) {

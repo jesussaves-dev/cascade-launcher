@@ -51,8 +51,8 @@ import dev.tom.cascade.model.AppEntry
 import dev.tom.cascade.util.AppSection
 import dev.tom.cascade.util.activeLetter
 import dev.tom.cascade.util.jumpTarget
+import dev.tom.cascade.util.railLetterFor
 import dev.tom.cascade.util.railLetters
-import dev.tom.cascade.util.sectionOffsets
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalFoundationApi::class)
@@ -167,7 +167,9 @@ fun HomeScreen(
 
         FavoriteGrid(
             favorites = favorites,
-            wide = LocalConfiguration.current.screenWidthDp >= 600,
+            wide = LocalConfiguration.current.let {
+                it.screenWidthDp >= 600 && it.screenHeightDp >= 600
+            },
             iconFor = iconFor,
             onLaunch = onLaunch,
             onLongPress = onLongPress,
@@ -217,11 +219,14 @@ fun HomeScreen(
                 .align(Alignment.BottomCenter)
                 .padding(bottom = 16.dp),
         )
-        if (sections.isNotEmpty()) {
-            val presentLetters = remember(sections) { sectionOffsets(sections).keys }
-            val active by remember(sections, listState) {
+        val presentLetters = remember(sections) {
+            sections.mapNotNull { railLetterFor(it.header) }.toSet()
+        }
+        if (presentLetters.isNotEmpty()) {
+            val activeHeader by remember(sections, listState) {
                 derivedStateOf { activeLetter(listState.firstVisibleItemIndex, sections) }
             }
+            val active = activeHeader?.let(::railLetterFor)
             AlphabetRail(
                 letters = railLetters,
                 presentLetters = presentLetters,

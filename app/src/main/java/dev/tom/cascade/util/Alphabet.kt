@@ -35,10 +35,17 @@ fun activeLetter(firstVisibleItemIndex: Int, sections: List<AppSection>): String
     return null
 }
 
-private fun railPosition(header: String): Int {
+fun railLetterFor(header: String): String? {
     val base = Normalizer.normalize(header, Normalizer.Form.NFD)
         .replace(Regex("\\p{M}+"), "")
         .uppercase(Locale.ROOT)
-        .firstOrNull() ?: return railLetters.lastIndex
-    return if (base in 'A'..'Z') railLetters.indexOf(base.toString()) else railLetters.lastIndex
+        .firstOrNull()
+    return when {
+        base != null && base in 'A'..'Z' -> base.toString()
+        header.trim().startsWith("#") -> "#"
+        else -> null
+    }
 }
+
+private fun railPosition(header: String): Int =
+    railLetterFor(header)?.let { railLetters.indexOf(it) } ?: railLetters.lastIndex
