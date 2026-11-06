@@ -173,6 +173,10 @@ fun HomeScreen(
             }
         }
 
+        ClockHeader()
+
+        widgets()
+
         FavoriteGrid(
             favorites = favorites,
             wide = LocalConfiguration.current.let {
@@ -196,8 +200,6 @@ fun HomeScreen(
                     .fillMaxSize()
                     .nestedScroll(pullToSearch),
             ) {
-                item(key = "clock") { ClockHeader() }
-                item(key = "widgets") { widgets() }
                 sections.forEach { section ->
                     stickyHeader(key = "header-${section.header}") {
                         Text(

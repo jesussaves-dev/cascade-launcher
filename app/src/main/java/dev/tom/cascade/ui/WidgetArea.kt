@@ -4,6 +4,7 @@ import android.appwidget.AppWidgetHost
 import android.appwidget.AppWidgetManager
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -27,7 +28,10 @@ fun WidgetArea(host: AppWidgetHost, ids: List<Int>, onStale: (Int) -> Unit) {
             androidx.compose.runtime.key(id) {
                 AndroidView(
                     factory = { host.createView(context, id, info) },
-                    modifier = Modifier.fillMaxWidth(),
+                    // Providers measure match_parent unless we pin their min height.
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(info.minHeight.coerceIn(48, 220).dp),
                 )
             }
         }

@@ -28,11 +28,13 @@ any third-party launcher.
 - Hidden app management in settings
 - Icon packs: use an installed ADW icon pack, with the system icon as fallback
 - Per-app icons: long-press any app and pick a different icon from the pack
+- Large clock at the top of the list, following the system 12/24-hour setting
+- App widgets hosted under the clock; add or remove them in settings
 - Light, dark or system theme, six accent colours, adjustable icon size
 - Works as the system default launcher
 
-Not included (deliberately): widgets, notification history or replies,
-weather, AI integrations, backup, work profiles, analytics.
+Not included (deliberately): notification history or replies, weather,
+AI integrations, backup, work profiles, analytics.
 
 ## Build
 
@@ -93,6 +95,17 @@ icon** in the same dialog returns the app to the pack's own icon, or to its
 normal icon when the pack has no entry. Choices are stored locally; switching
 packs leaves them stored but they only apply when the pack has a drawable with
 that name.
+
+## Clock and widgets
+
+The home screen starts with a clock: the time in the system's 12- or 24-hour
+format, today's date underneath, updated every minute.
+
+Settings → **Widgets** → **Add widget** opens the system widget picker; the
+widget appears under the clock and scrolls with the list. **Remove** takes it
+off again. Widget ids are stored locally, and a widget whose app is uninstalled
+disappears on the next launch. Widgets are not resized or reordered in this
+version.
 
 ## Project layout
 
