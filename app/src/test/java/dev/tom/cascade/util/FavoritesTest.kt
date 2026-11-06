@@ -22,3 +22,15 @@ class FavoritesTest {
         assertEquals(keys, moveFavorite(keys, 7, 0))
     }
 }
+
+class FavoriteOrderMergeTest {
+    @Test fun `keeps hidden stored keys while reordering the visible ones`() {
+        val stored = listOf("hidden", "a", "b")
+        assertEquals(listOf("hidden", "b", "a"), reorderStoredFavorites(stored, listOf("b", "a")))
+    }
+
+    @Test fun `leaves the stored list alone when the visible list does not match`() {
+        val stored = listOf("a", "b")
+        assertEquals(stored, reorderStoredFavorites(stored, listOf("b", "gone")))
+    }
+}

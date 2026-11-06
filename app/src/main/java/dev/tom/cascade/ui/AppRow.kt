@@ -35,11 +35,12 @@ fun AppRow(
     onClick: () -> Unit,
     onLongClick: () -> Unit,
     modifier: Modifier = Modifier,
+    interactive: Boolean = true,
 ) {
     Row(
         modifier = modifier
             .fillMaxWidth()
-            .combinedClickable(onClick = onClick, onLongClick = onLongClick)
+            .then(if (interactive) Modifier.combinedClickable(onClick = onClick, onLongClick = onLongClick) else Modifier)
             .padding(horizontal = 20.dp, vertical = 8.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {

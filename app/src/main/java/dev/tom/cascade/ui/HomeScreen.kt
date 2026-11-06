@@ -91,6 +91,7 @@ fun HomeScreen(
 ) {
     val scope = rememberCoroutineScope()
     var favoriteOrder by remember(favorites) { mutableStateOf(favorites) }
+    var draggingFavorite by remember { mutableStateOf<String?>(null) }
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -189,12 +190,18 @@ fun HomeScreen(
                                 .padding(horizontal = 20.dp, vertical = 8.dp),
                         )
                     }
-                    itemsIndexed(favoriteOrder, key = { _, app -> "fav:${app.key}" }) { index, app ->
+                    itemsIndexed(
+                        favoriteOrder,
+                        key = { _, app -> "fav:${app.key}" },
+                        contentType = { _, _ -> "favorite" },
+                    ) { index, app ->
                         FavoriteRow(
                             app = app,
                             icon = remember(app.key, iconSizeDp) { iconFor(app) },
                             iconSizeDp = iconSizeDp,
                             hasNotification = app.packageName in notifiedPackages,
+                            showHandle = draggingFavorite != null,
+                            onDragStart = { draggingFavorite = app.key },
                             onClick = { onLaunch(app) },
                             onLongClick = { onLongPress(app) },
                             onMove = { steps ->
@@ -208,7 +215,11 @@ fun HomeScreen(
                                 favoriteOrder = reorderFavorites(favoriteOrder, index, index + 1)
                                 onFavoriteMoved(favoriteOrder.map { it.key })
                             },
-                            onMoveEnd = { onFavoriteMoved(favoriteOrder.map { it.key }) },
+                            onMoveEnd = {
+                                draggingFavorite = null
+                                onFavoriteMoved(favoriteOrder.map { it.key })
+                            },
+                            modifier = Modifier.animateItem(),
                         )
                     }
                 }

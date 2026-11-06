@@ -3,6 +3,7 @@ package dev.tom.cascade.data
 import android.content.Context
 import dev.tom.cascade.iconpack.IconOverrideCodec
 import dev.tom.cascade.model.Folder
+import dev.tom.cascade.util.reorderStoredFavorites
 import dev.tom.cascade.model.Place
 import dev.tom.cascade.model.Weather
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -86,6 +87,11 @@ class Prefs(context: Context) {
 
     fun setFavorites(keys: List<String>) {
         writeFavorites(keys)
+    }
+
+    /** Applies a new order for the visible favourites, leaving hidden or stale keys in place. */
+    fun setFavoriteOrder(visibleOrder: List<String>) {
+        writeFavorites(reorderStoredFavorites(_favorites.value, visibleOrder))
     }
 
     fun createFolder(name: String, appKey: String): Folder {

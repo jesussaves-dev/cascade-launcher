@@ -335,7 +335,7 @@ class HomeActivity : ComponentActivity() {
                         HomeScreen(
                             sections = appSections,
                             favorites = favorites,
-                            onFavoriteMoved = prefs::setFavorites,
+                            onFavoriteMoved = prefs::setFavoriteOrder,
                             showBanner = !bannerDismissed && !defaultLauncher,
                             onDismissBanner = prefs::dismissBanner,
                             onSetDefault = { openDefaultLauncherSettings(this@HomeActivity) },
