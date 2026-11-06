@@ -46,7 +46,6 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
 import androidx.compose.ui.input.nestedscroll.NestedScrollSource
 import androidx.compose.ui.input.nestedscroll.nestedScroll
-import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalDensity
 import dev.tom.cascade.model.AppEntry
 import dev.tom.cascade.model.Folder
@@ -189,17 +188,27 @@ fun HomeScreen(
                     .fillMaxSize()
                     .nestedScroll(pullToSearch),
             ) {
-                item(key = "favorites") {
-                    FavoriteGrid(
-                        favorites = favorites,
-                        wide = LocalConfiguration.current.let {
-                            it.screenWidthDp >= 600 && it.screenHeightDp >= 600
-                        },
-                        notifiedPackages = notifiedPackages,
-                        iconFor = iconFor,
-                        onLaunch = onLaunch,
-                        onLongPress = onLongPress,
-                    )
+                if (favorites.isNotEmpty()) {
+                    item(key = "favorites-header") {
+                        Text(
+                            text = "Favorites",
+                            style = MaterialTheme.typography.titleSmall,
+                            color = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 20.dp, vertical = 8.dp),
+                        )
+                    }
+                    items(favorites, key = { "fav:${it.key}" }) { app ->
+                        AppRow(
+                            app = app,
+                            icon = remember(app.key, iconSizeDp) { iconFor(app) },
+                            iconSizeDp = iconSizeDp,
+                            hasNotification = app.packageName in notifiedPackages,
+                            onClick = { onLaunch(app) },
+                            onLongClick = { onLongPress(app) },
+                        )
+                    }
                 }
                 if (sections.isEmpty()) {
                     item(key = "empty") {
