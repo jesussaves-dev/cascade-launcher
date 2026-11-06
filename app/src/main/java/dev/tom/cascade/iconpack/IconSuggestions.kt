@@ -2,6 +2,9 @@ package dev.tom.cascade.iconpack
 
 data class PackIcon(val drawable: String, val name: String)
 
+/** One grid entry per drawable; some packs list a drawable under several names. */
+fun uniqueIcons(icons: List<PackIcon>): List<PackIcon> = icons.distinctBy { it.drawable }
+
 fun orderIcons(icons: List<PackIcon>, label: String, packageName: String): List<PackIcon> {
     val tokens = listOf(
         normalizeToken(label),

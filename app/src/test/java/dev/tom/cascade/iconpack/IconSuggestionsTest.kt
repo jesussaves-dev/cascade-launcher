@@ -25,4 +25,16 @@ class IconSuggestionsTest {
             orderIcons(icons, label = "Shop", packageName = "com.android.vending").first().drawable,
         )
     }
+
+    @Test fun `duplicate drawables keep the first entry`() {
+        val icons = listOf(
+            PackIcon("icon_playstore", "Play Store"),
+            PackIcon("icon_playstore", "Google Play"),
+            PackIcon("icon_other", "Other"),
+        )
+        assertEquals(
+            listOf("icon_playstore" to "Play Store", "icon_other" to "Other"),
+            uniqueIcons(icons).map { it.drawable to it.name },
+        )
+    }
 }

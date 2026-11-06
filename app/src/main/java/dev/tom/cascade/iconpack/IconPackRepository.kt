@@ -187,7 +187,7 @@ class IconPackRepository(
                 event = parser.next()
             }
         }
-        return items.sortedBy { it.name.lowercase() }
+        return uniqueIcons(items).sortedBy { it.name.lowercase() }
     }
 
     private fun parseIcons(input: java.io.InputStream): List<PackIcon> = runCatching {
@@ -203,7 +203,7 @@ class IconPackRepository(
             val drawable = element.getAttribute("drawable")
             if (drawable.isBlank()) return@mapNotNull null
             PackIcon(drawable, element.getAttribute("name").ifBlank { drawable })
-        }.sortedBy { it.name.lowercase() }
+        }.let(::uniqueIcons).sortedBy { it.name.lowercase() }
     }.getOrDefault(emptyList())
 
     private fun loadMapping(packageName: String): IconPackMapping? {
