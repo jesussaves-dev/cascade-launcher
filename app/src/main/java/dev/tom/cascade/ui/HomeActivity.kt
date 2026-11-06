@@ -23,10 +23,12 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import dev.tom.cascade.CascadeApp
 import dev.tom.cascade.data.ButtonAction
 import dev.tom.cascade.model.AppEntry
+import dev.tom.cascade.model.Folder
 import dev.tom.cascade.notifications.NotificationStore
 import dev.tom.cascade.ui.theme.CascadeTheme
 import dev.tom.cascade.util.canFavorite
 import dev.tom.cascade.util.favoriteApps
+import dev.tom.cascade.util.folderApps
 import dev.tom.cascade.util.isDefaultLauncher
 import dev.tom.cascade.util.isNotificationListenerEnabled
 import dev.tom.cascade.util.openDefaultLauncherSettings
@@ -53,6 +55,7 @@ class HomeActivity : ComponentActivity() {
             val buttonTap by prefs.buttonTap.collectAsStateWithLifecycle()
             val buttonSwipe by prefs.buttonSwipe.collectAsStateWithLifecycle()
             val showPreviews by prefs.showNotificationPreviews.collectAsStateWithLifecycle()
+            val folders by prefs.folders.collectAsStateWithLifecycle()
             val byPackage by NotificationStore.byPackage.collectAsStateWithLifecycle()
             val density = LocalDensity.current.density
             val iconPx = (iconSizeDp * density).toInt()
@@ -65,6 +68,9 @@ class HomeActivity : ComponentActivity() {
                 mutableStateOf(isNotificationListenerEnabled(this@HomeActivity))
             }
             var selected by remember { mutableStateOf<AppEntry?>(null) }
+            var openedFolder by remember { mutableStateOf<Folder?>(null) }
+            var folderAction by remember { mutableStateOf<Folder?>(null) }
+            var removingFromFolder by remember { mutableStateOf<Pair<Folder, AppEntry>?>(null) }
 
             LifecycleEventEffect(Lifecycle.Event.ON_RESUME) {
                 defaultLauncher = isDefaultLauncher(this@HomeActivity)
@@ -74,11 +80,14 @@ class HomeActivity : ComponentActivity() {
             val notifiedPackages = if (notificationsEnabled) byPackage.keys else emptySet()
 
             val collator = remember { Collator.getInstance() }
-            val favorites = remember(allApps, favoriteKeys, hidden) {
-                favoriteApps(allApps, favoriteKeys, hidden)
+            val favorites = remember(allApps, favoriteKeys, hidden, folders) {
+                favoriteApps(allApps, favoriteKeys, hidden, folders)
             }
-            val appSections = remember(allApps, favoriteKeys, hidden, collator) {
-                sections(allApps, favoriteKeys, hidden, collator)
+            val appSections = remember(allApps, favoriteKeys, hidden, collator, folders) {
+                sections(allApps, favoriteKeys, hidden, collator, folders)
+            }
+            val folderContents = remember(allApps, folders, hidden) {
+                folders.associate { it.id to folderApps(it, allApps, hidden) }
             }
             val visibleApps = remember(allApps, hidden) {
                 allApps.filterNot { it.key in hidden }
@@ -156,8 +165,25 @@ class HomeActivity : ComponentActivity() {
                             iconFor = iconFor,
                             iconSizeDp = iconSizeDp,
                             notifiedPackages = notifiedPackages,
+                            folderContents = folderContents,
+                            onFolderOpen = { openedFolder = it },
+                            onFolderLongPress = { folderAction = it },
                         )
                     }
+                }
+
+                openedFolder?.let { folder ->
+                    FolderSheet(
+                        folder = folder,
+                        apps = folderContents[folder.id].orEmpty(),
+                        iconFor = iconFor,
+                        onLaunch = {
+                            openedFolder = null
+                            launchApp(it)
+                        },
+                        onLongPressApp = { removingFromFolder = folder to it },
+                        onDismiss = { openedFolder = null },
+                    )
                 }
 
                 selected?.let { app ->

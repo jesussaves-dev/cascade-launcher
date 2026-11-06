@@ -48,6 +48,7 @@ import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalDensity
 import dev.tom.cascade.model.AppEntry
+import dev.tom.cascade.model.Folder
 import dev.tom.cascade.util.AppSection
 import dev.tom.cascade.util.HomeEntry
 import dev.tom.cascade.util.activeLetter
@@ -73,6 +74,9 @@ fun HomeScreen(
     iconFor: (AppEntry) -> ImageBitmap?,
     iconSizeDp: Int,
     notifiedPackages: Set<String> = emptySet(),
+    folderContents: Map<String, List<AppEntry>> = emptyMap(),
+    onFolderOpen: (Folder) -> Unit = {},
+    onFolderLongPress: (Folder) -> Unit = {},
 ) {
     val openSearch by rememberUpdatedState(onOpenSearch)
     val threshold = with(LocalDensity.current) { 48.dp.toPx() }
@@ -202,18 +206,24 @@ fun HomeScreen(
                                 .padding(horizontal = 20.dp, vertical = 8.dp),
                         )
                     }
-                    items(
-                        section.items.filterIsInstance<HomeEntry.AppItem>().map { it.app },
-                        key = { it.key },
-                    ) { app ->
-                        AppRow(
-                            app = app,
-                            icon = remember(app.key, iconSizeDp) { iconFor(app) },
-                            iconSizeDp = iconSizeDp,
-                            hasNotification = app.packageName in notifiedPackages,
-                            onClick = { onLaunch(app) },
-                            onLongClick = { onLongPress(app) },
-                        )
+                    items(section.items, key = { it.key }) { entry ->
+                        when (entry) {
+                            is HomeEntry.AppItem -> AppRow(
+                                app = entry.app,
+                                icon = remember(entry.app.key, iconSizeDp) { iconFor(entry.app) },
+                                iconSizeDp = iconSizeDp,
+                                hasNotification = entry.app.packageName in notifiedPackages,
+                                onClick = { onLaunch(entry.app) },
+                                onLongClick = { onLongPress(entry.app) },
+                            )
+                            is HomeEntry.FolderItem -> FolderRow(
+                                folder = entry.folder,
+                                apps = folderContents[entry.folder.id].orEmpty(),
+                                iconFor = iconFor,
+                                onClick = { onFolderOpen(entry.folder) },
+                                onLongClick = { onFolderLongPress(entry.folder) },
+                            )
+                        }
                     }
                 }
             }
