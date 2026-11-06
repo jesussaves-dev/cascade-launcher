@@ -5,6 +5,7 @@ import android.content.Context
 import android.content.ContextWrapper
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
@@ -52,7 +53,9 @@ fun CascadeTheme(
             }
         }
     }
-    MaterialTheme(colorScheme = scheme, content = content)
+    MaterialTheme(colorScheme = scheme) {
+        Surface(color = scheme.background, contentColor = scheme.onBackground, content = content)
+    }
 }
 
 private tailrec fun Context.findActivity(): Activity? = when (this) {
