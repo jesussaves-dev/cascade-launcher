@@ -93,7 +93,7 @@ private fun NotificationRow(
                 .padding(horizontal = 24.dp, vertical = 8.dp),
         ) {
             Text(
-                text = notification.title,
+                text = if (showPreview) notification.title else "Notification",
                 style = MaterialTheme.typography.bodyLarge,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,

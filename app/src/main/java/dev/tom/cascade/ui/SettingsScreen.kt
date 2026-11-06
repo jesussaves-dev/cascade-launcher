@@ -33,6 +33,7 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Slider
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
@@ -60,6 +61,10 @@ fun SettingsScreen(
     buttonTap: ButtonAction,
     buttonSwipe: ButtonAction,
     apps: List<AppEntry>,
+    notificationsEnabled: Boolean,
+    showPreviews: Boolean,
+    onShowPreviews: (Boolean) -> Unit,
+    onOpenNotificationAccess: () -> Unit,
     onTheme: (ThemeMode) -> Unit,
     onAccent: (Int) -> Unit,
     onIconSize: (Int) -> Unit,
@@ -160,6 +165,37 @@ fun SettingsScreen(
             HorizontalDivider(Modifier.padding(vertical = 16.dp))
             SectionTitle("Default launcher")
             OutlinedButton(onClick = onSetDefault) { Text("Set Cascade as default") }
+
+            HorizontalDivider(Modifier.padding(vertical = 16.dp))
+            SectionTitle("Notifications")
+            Row(
+                modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Text(
+                    text = "Notification access — ${if (notificationsEnabled) "On" else "Off"}",
+                    modifier = Modifier.weight(1f),
+                )
+                TextButton(onClick = onOpenNotificationAccess) { Text("Open") }
+            }
+            Row(
+                modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Column(Modifier.weight(1f)) {
+                    Text("Show notification previews")
+                    Text(
+                        "Off shows dots only",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+                Switch(
+                    checked = showPreviews && notificationsEnabled,
+                    onCheckedChange = onShowPreviews,
+                    enabled = notificationsEnabled,
+                )
+            }
 
             HorizontalDivider(Modifier.padding(vertical = 16.dp))
             SectionTitle("Hidden apps")

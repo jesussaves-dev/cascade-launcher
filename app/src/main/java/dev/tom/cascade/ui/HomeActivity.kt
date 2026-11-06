@@ -23,11 +23,14 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import dev.tom.cascade.CascadeApp
 import dev.tom.cascade.data.ButtonAction
 import dev.tom.cascade.model.AppEntry
+import dev.tom.cascade.notifications.NotificationStore
 import dev.tom.cascade.ui.theme.CascadeTheme
 import dev.tom.cascade.util.canFavorite
 import dev.tom.cascade.util.favoriteApps
 import dev.tom.cascade.util.isDefaultLauncher
+import dev.tom.cascade.util.isNotificationListenerEnabled
 import dev.tom.cascade.util.openDefaultLauncherSettings
+import dev.tom.cascade.util.openNotificationListenerSettings
 import dev.tom.cascade.util.sections
 import java.text.Collator
 
@@ -49,6 +52,8 @@ class HomeActivity : ComponentActivity() {
             val bannerDismissed by prefs.bannerDismissed.collectAsStateWithLifecycle()
             val buttonTap by prefs.buttonTap.collectAsStateWithLifecycle()
             val buttonSwipe by prefs.buttonSwipe.collectAsStateWithLifecycle()
+            val showPreviews by prefs.showNotificationPreviews.collectAsStateWithLifecycle()
+            val byPackage by NotificationStore.byPackage.collectAsStateWithLifecycle()
             val density = LocalDensity.current.density
             val iconPx = (iconSizeDp * density).toInt()
             val iconFor: (AppEntry) -> androidx.compose.ui.graphics.ImageBitmap? = { repo.icon(it, iconPx) }
@@ -56,11 +61,17 @@ class HomeActivity : ComponentActivity() {
             var searching by rememberSaveable { mutableStateOf(false) }
             var showSettings by rememberSaveable { mutableStateOf(false) }
             var defaultLauncher by remember { mutableStateOf(true) }
+            var notificationsEnabled by remember {
+                mutableStateOf(isNotificationListenerEnabled(this@HomeActivity))
+            }
             var selected by remember { mutableStateOf<AppEntry?>(null) }
 
             LifecycleEventEffect(Lifecycle.Event.ON_RESUME) {
                 defaultLauncher = isDefaultLauncher(this@HomeActivity)
+                notificationsEnabled = isNotificationListenerEnabled(this@HomeActivity)
             }
+
+            val notifiedPackages = if (notificationsEnabled) byPackage.keys else emptySet()
 
             val collator = remember { Collator.getInstance() }
             val favorites = remember(allApps, favoriteKeys, hidden) {
@@ -97,6 +108,12 @@ class HomeActivity : ComponentActivity() {
                             buttonTap = buttonTap,
                             buttonSwipe = buttonSwipe,
                             apps = visibleApps,
+                            notificationsEnabled = notificationsEnabled,
+                            showPreviews = showPreviews,
+                            onShowPreviews = prefs::setShowNotificationPreviews,
+                            onOpenNotificationAccess = {
+                                openNotificationListenerSettings(this@HomeActivity)
+                            },
                             onTheme = prefs::setTheme,
                             onAccent = prefs::setAccent,
                             onIconSize = prefs::setIconSize,
@@ -138,6 +155,7 @@ class HomeActivity : ComponentActivity() {
                             onButtonSwipeUp = { runAction(buttonSwipe) },
                             iconFor = iconFor,
                             iconSizeDp = iconSizeDp,
+                            notifiedPackages = notifiedPackages,
                         )
                     }
                 }
@@ -147,6 +165,17 @@ class HomeActivity : ComponentActivity() {
                         app = app,
                         pinned = app.key in favoriteKeys,
                         removable = repo.isRemovable(app),
+                        notifications = if (notificationsEnabled) {
+                            byPackage[app.packageName].orEmpty()
+                        } else {
+                            emptyList()
+                        },
+                        showPreviews = showPreviews && notificationsEnabled,
+                        onOpenNotification = { item ->
+                            selected = null
+                            runCatching { item.contentIntent?.send() }
+                        },
+                        onDismissNotification = { NotificationStore.dismiss(it.key) },
                         onPinToggle = {
                             if (canFavorite(favoriteKeys, app.key, installedFavoriteCount)) {
                                 prefs.toggleFavorite(app.key)
