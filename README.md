@@ -7,6 +7,7 @@ Vertical apps, pop-up folders, icon packs, notification dots, weather and a quie
 
 [![Release](https://img.shields.io/github/v/release/jesussaves-ai/cascade-launcher?style=flat-square)](https://github.com/jesussaves-ai/cascade-launcher/releases)
 [![Licence](https://img.shields.io/badge/licence-MIT-blue?style=flat-square)](LICENSE)
+[![Ko-fi](https://img.shields.io/badge/buy_me_a_coffee-ko--fi-ff5e5b?style=flat-square&logo=kofi&logoColor=white)](https://ko-fi.com/jesussavesai)
 [![Android](https://img.shields.io/badge/android-8.0%2B-3ddc84?style=flat-square&logo=android&logoColor=white)](https://developer.android.com)
 [![Kotlin](https://img.shields.io/badge/kotlin-compose-7f52ff?style=flat-square&logo=kotlin&logoColor=white)](https://kotlinlang.org)
 
@@ -100,6 +101,13 @@ app/src/main/java/dev/tom/cascade/
 
 Logic that can be tested without Android lives in `util/`, `data/` codecs and
 `iconpack/` parsers, with JVM tests beside them.
+
+## Support
+
+Cascade is free, with no ads, no paywalls and no tracking. If it earns a place
+on your home screen and you feel like saying thanks, you can buy me a coffee:
+
+[![Buy me a coffee](https://img.shields.io/badge/%E2%98%95_Buy_me_a_coffee-ko--fi-ff5e5b?style=flat-square)](https://ko-fi.com/jesussavesai)
 
 ## Licence
 
