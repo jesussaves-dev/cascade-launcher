@@ -82,7 +82,7 @@ fun HomeScreen(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background)
+            .background(MaterialTheme.colorScheme.background.copy(alpha = 0.62f))
             .windowInsetsPadding(WindowInsets.safeDrawing),
     ) {
         Box(
@@ -206,7 +206,7 @@ fun HomeScreen(
                             color = MaterialTheme.colorScheme.primary,
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .background(MaterialTheme.colorScheme.background)
+                                .background(MaterialTheme.colorScheme.background.copy(alpha = 0.62f))
                                 .padding(horizontal = 20.dp, vertical = 8.dp),
                         )
                     }
