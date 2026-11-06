@@ -103,7 +103,7 @@ fun HomeScreen(
                 .fillMaxSize()
                 .align(Alignment.TopCenter),
         ) {
-    Column(modifier = Modifier.fillMaxSize().padding(end = 30.dp)) {
+    Column(modifier = Modifier.fillMaxSize().padding(end = 44.dp)) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
