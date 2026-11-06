@@ -78,6 +78,7 @@ fun HomeScreen(
     folderContents: Map<String, List<AppEntry>> = emptyMap(),
     onFolderOpen: (Folder) -> Unit = {},
     onFolderLongPress: (Folder) -> Unit = {},
+    widgets: @Composable () -> Unit = {},
     listState: LazyListState = rememberLazyListState(),
 ) {
     val openSearch by rememberUpdatedState(onOpenSearch)
@@ -196,6 +197,7 @@ fun HomeScreen(
                     .nestedScroll(pullToSearch),
             ) {
                 item(key = "clock") { ClockHeader() }
+                item(key = "widgets") { widgets() }
                 sections.forEach { section ->
                     stickyHeader(key = "header-${section.header}") {
                         Text(

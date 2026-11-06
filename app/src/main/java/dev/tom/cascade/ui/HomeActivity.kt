@@ -3,6 +3,9 @@ package dev.tom.cascade.ui
 import android.content.ActivityNotFoundException
 import android.content.ComponentName
 import android.content.Intent
+import android.app.Activity
+import android.appwidget.AppWidgetHost
+import android.appwidget.AppWidgetManager
 import android.net.Uri
 import android.os.Bundle
 import android.provider.Settings
@@ -11,6 +14,8 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
@@ -42,8 +47,27 @@ import dev.tom.cascade.util.sections
 import java.text.Collator
 
 class HomeActivity : ComponentActivity() {
+    private lateinit var widgetHost: AppWidgetHost
+    private var pendingWidgetId = AppWidgetManager.INVALID_APPWIDGET_ID
+
+    private val pickWidget = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+        val id = pendingWidgetId
+        pendingWidgetId = AppWidgetManager.INVALID_APPWIDGET_ID
+        if (id == AppWidgetManager.INVALID_APPWIDGET_ID) return@registerForActivityResult
+        val returned = result.data?.getIntExtra(
+            AppWidgetManager.EXTRA_APPWIDGET_ID,
+            AppWidgetManager.INVALID_APPWIDGET_ID,
+        ) ?: AppWidgetManager.INVALID_APPWIDGET_ID
+        if (result.resultCode == Activity.RESULT_OK && returned == id) {
+            (application as CascadeApp).prefs.addWidgetId(id)
+        } else {
+            widgetHost.deleteAppWidgetId(id)
+        }
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        widgetHost = AppWidgetHost(this, WIDGET_HOST_ID)
         enableEdgeToEdge()
         setContent {
             val app = applicationContext as CascadeApp
@@ -62,6 +86,11 @@ class HomeActivity : ComponentActivity() {
             val showPreviews by prefs.showNotificationPreviews.collectAsStateWithLifecycle()
             val folders by prefs.folders.collectAsStateWithLifecycle()
             val byPackage by NotificationStore.byPackage.collectAsStateWithLifecycle()
+            val widgetIds by prefs.widgetIds.collectAsStateWithLifecycle()
+            val widgetManager = remember { AppWidgetManager.getInstance(this@HomeActivity) }
+            LaunchedEffect(widgetIds) {
+                widgetIds.filter { widgetManager.getAppWidgetInfo(it) == null }.forEach(prefs::removeWidgetId)
+            }
             val iconPacks = app.iconPacks
             val packs by iconPacks.packs.collectAsStateWithLifecycle()
             val activeIconPack by iconPacks.activePack.collectAsStateWithLifecycle()
@@ -196,6 +225,7 @@ class HomeActivity : ComponentActivity() {
                             folderContents = folderContents,
                             onFolderOpen = { openedFolder = it },
                             onFolderLongPress = { folderAction = it },
+                            widgets = { WidgetArea(widgetHost, widgetIds, prefs::removeWidgetId) },
                             listState = listState,
                         )
                     }
@@ -372,6 +402,34 @@ class HomeActivity : ComponentActivity() {
         }
     }
 
+    override fun onStart() {
+        super.onStart()
+        widgetHost.startListening()
+    }
+
+    override fun onStop() {
+        widgetHost.stopListening()
+        super.onStop()
+    }
+
+    private fun addWidget() {
+        val id = widgetHost.allocateAppWidgetId()
+        val intent = Intent(AppWidgetManager.ACTION_APPWIDGET_PICK)
+            .putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, id)
+        pendingWidgetId = id
+        if (intent.resolveActivity(packageManager) == null) {
+            widgetHost.deleteAppWidgetId(id)
+            pendingWidgetId = AppWidgetManager.INVALID_APPWIDGET_ID
+            Toast.makeText(this, "No widget picker available", Toast.LENGTH_SHORT).show()
+            return
+        }
+        runCatching { pickWidget.launch(intent) }.onFailure {
+            widgetHost.deleteAppWidgetId(id)
+            pendingWidgetId = AppWidgetManager.INVALID_APPWIDGET_ID
+            Toast.makeText(this, "No widget picker available", Toast.LENGTH_SHORT).show()
+        }
+    }
+
     private fun launchApp(app: AppEntry) {
         val intent = Intent(Intent.ACTION_MAIN).apply {
             component = ComponentName(app.packageName, app.activityName)
@@ -415,5 +473,9 @@ class HomeActivity : ComponentActivity() {
                 .setData(Uri.parse("package:${app.packageName}"))
                 .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK),
         )
+    }
+
+    companion object {
+        private const val WIDGET_HOST_ID = 1024
     }
 }
