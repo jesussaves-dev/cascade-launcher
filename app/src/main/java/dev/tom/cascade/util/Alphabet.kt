@@ -15,21 +15,23 @@ fun sectionOffsets(sections: List<AppSection>): Map<String, Int> {
     }
 }
 
-fun jumpTarget(letter: String, sections: List<AppSection>): Int? {
+fun jumpTarget(letter: String, sections: List<AppSection>, leading: Int = 0): Int? {
     if (sections.isEmpty()) return null
     val offsets = sectionOffsets(sections)
-    if (letter == "#") return offsets["#"] ?: 0
+    if (letter == "#") return leading + (offsets["#"] ?: 0)
     val target = railLetters.indexOf(letter)
-    if (target < 0) return offsets.values.last()
+    if (target < 0) return leading + offsets.values.last()
     val next = sections.firstOrNull { it.header != "#" && railPosition(it.header) >= target }
-    return next?.let { offsets.getValue(it.header) } ?: offsets.values.last()
+    return leading + (next?.let { offsets.getValue(it.header) } ?: offsets.values.last())
 }
 
-fun activeLetter(firstVisibleItemIndex: Int, sections: List<AppSection>): String? {
+fun activeLetter(firstVisibleItemIndex: Int, sections: List<AppSection>, leading: Int = 0): String? {
+    val index = firstVisibleItemIndex - leading
+    if (index < 0) return null
     var offset = 0
     for (section in sections) {
         val end = offset + 1 + section.items.size
-        if (firstVisibleItemIndex in offset until end) return section.header
+        if (index in offset until end) return section.header
         offset = end
     }
     return null

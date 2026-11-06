@@ -267,9 +267,12 @@ fun HomeScreen(
         val presentLetters = remember(sections) {
             sections.mapNotNull { railLetterFor(it.header) }.toSet()
         }
+        val leadingItems = if (favorites.isEmpty()) 0 else favorites.size + 1
         if (presentLetters.isNotEmpty()) {
-            val activeHeader by remember(sections, listState) {
-                derivedStateOf { activeLetter(listState.firstVisibleItemIndex, sections) }
+            val activeHeader by remember(sections, listState, leadingItems) {
+                derivedStateOf {
+                    activeLetter(listState.firstVisibleItemIndex, sections, leadingItems)
+                }
             }
             val active = activeHeader?.let(::railLetterFor)
             AlphabetRail(
@@ -277,7 +280,7 @@ fun HomeScreen(
                 presentLetters = presentLetters,
                 active = active,
                 onSelect = { letter ->
-                    jumpTarget(letter, sections)?.let { index ->
+                    jumpTarget(letter, sections, leadingItems)?.let { index ->
                         scope.launch { listState.animateScrollToItem(index) }
                     }
                 },

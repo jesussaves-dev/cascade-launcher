@@ -41,6 +41,13 @@ class AlphabetTest {
         assertNull(activeLetter(99, sections))
     }
 
+    @Test fun `rail offsets account for leading favorites`() {
+        assertEquals(13, jumpTarget("#", sections, leading = 13))
+        assertEquals(3 + 13, jumpTarget("C", sections, leading = 13))
+        assertEquals("A", activeLetter(13, sections, leading = 13))
+        assertNull(activeLetter(12, sections, leading = 13))
+    }
+
     @Test fun `accented headers map to their base rail letter`() {
         assertEquals("E", railLetterFor("É"))
         assertEquals("#", railLetterFor("#"))
