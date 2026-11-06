@@ -19,12 +19,15 @@ any third-party launcher.
 - Instant search: tap the search field, pull down past the top of the list,
   or tap the bottom button
 - Long-press actions: pin/unpin, app info, uninstall (user apps only), hide
+- Optional notification dots: a dot on apps and favourites with active
+  notifications, and their titles, text and relative time in the long-press
+  sheet — tap to open, X to dismiss; previews can be hidden
 - Hidden app management in settings
 - Light, dark or system theme, six accent colours, adjustable icon size
 - Works as the system default launcher
 
-Not included (deliberately): widgets, icon packs, notification badges, weather,
-AI integrations, backup, work profiles, folders, analytics.
+Not included (deliberately): widgets, icon packs, notification history or
+replies, weather, AI integrations, backup, work profiles, folders, analytics.
 
 ## Build
 
@@ -52,14 +55,23 @@ Tests:
 Open Cascade, tap the settings gear, then **Set Cascade as default**. On some
 devices you can also use Settings → Apps → Default apps → Home app.
 
+## Optional: notification dots
+
+Cascade reads notifications only through Android's notification listener.
+Nothing leaves the device and no notification content is stored on disk.
+Turn it on with **Settings → Notifications → Open**, enable Cascade, and come
+back. The **Show notification previews** switch hides sender names and message
+text, leaving dots and times only. Revoke access at any time; dots disappear.
+
 ## Project layout
 
 ```
 app/src/main/java/dev/tom/cascade/
-  data/       apps repository, preferences
-  model/      AppEntry
-  ui/         Compose screens and activity
-  util/       pure sorting, sectioning and search logic
+  data/          apps repository, preferences
+  model/         AppEntry
+  notifications/ listener, in-memory store, notification model
+  ui/            Compose screens and activity
+  util/          pure sorting, sectioning and search logic
 ```
 
 The sorting/search logic is pure Kotlin and unit-tested in
