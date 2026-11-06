@@ -195,6 +195,7 @@ fun HomeScreen(
                     .fillMaxSize()
                     .nestedScroll(pullToSearch),
             ) {
+                item(key = "clock") { ClockHeader() }
                 sections.forEach { section ->
                     stickyHeader(key = "header-${section.header}") {
                         Text(
