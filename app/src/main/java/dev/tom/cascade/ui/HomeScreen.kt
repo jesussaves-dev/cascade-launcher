@@ -28,8 +28,11 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.derivedStateOf
+import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -50,6 +53,7 @@ import dev.tom.cascade.util.AppSection
 import dev.tom.cascade.util.HomeEntry
 import dev.tom.cascade.util.activeLetter
 import dev.tom.cascade.util.jumpTarget
+import dev.tom.cascade.util.favoriteTarget
 import dev.tom.cascade.util.moveFavorite
 import dev.tom.cascade.util.railLetterFor
 import dev.tom.cascade.util.railLetters
@@ -92,7 +96,11 @@ fun HomeScreen(
 ) {
     val scope = rememberCoroutineScope()
     var favoriteOrder by remember(favorites) { mutableStateOf(favorites) }
-    var draggingFavorite by remember { mutableStateOf<String?>(null) }
+    // The list order stays frozen while a row is lifted; only the visuals move.
+    var dragKey by remember { mutableStateOf<String?>(null) }
+    var dragFrom by remember { mutableIntStateOf(0) }
+    var dragOffset by remember { mutableFloatStateOf(0f) }
+    var dragRowHeight by remember { mutableFloatStateOf(0f) }
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -196,48 +204,59 @@ fun HomeScreen(
                         key = { _, app -> "fav:${app.key}" },
                         contentType = { _, _ -> "favorite" },
                     ) { index, app ->
+                        val lifted = dragKey == app.key
+                        val target = favoriteTarget(dragFrom, dragOffset, dragRowHeight, favoriteOrder.size)
+                        val shift = when {
+                            dragKey == null -> 0f
+                            lifted -> dragOffset
+                            dragFrom < target && index in (dragFrom + 1)..target -> -dragRowHeight
+                            dragFrom > target && index in target until dragFrom -> dragRowHeight
+                            else -> 0f
+                        }
+                        val placeShift by animateFloatAsState(shift, label = "favoriteShift")
                         FavoriteRow(
                             app = app,
                             icon = remember(app.key, iconSizeDp) { iconFor(app) },
                             iconSizeDp = iconSizeDp,
                             hasNotification = app.packageName in notifiedPackages,
-                            showHandle = draggingFavorite != null,
-                            onDragStart = { draggingFavorite = app.key },
+                            showHandle = dragKey != null,
+                            dragging = lifted,
+                            offsetPx = if (lifted) dragOffset else placeShift,
+                            onDragStart = { height ->
+                                dragKey = app.key
+                                dragFrom = index
+                                dragOffset = 0f
+                                dragRowHeight = height
+                            },
+                            onDrag = { dy -> dragOffset += dy },
+                            onDragEnd = {
+                                val to = favoriteTarget(dragFrom, dragOffset, dragRowHeight, favoriteOrder.size)
+                                if (to != dragFrom) {
+                                    favoriteOrder = reorderFavorites(favoriteOrder, dragFrom, to)
+                                    onFavoriteMoved(favoriteOrder.map { it.key })
+                                }
+                                dragKey = null
+                                dragOffset = 0f
+                            },
                             onClick = { onLaunch(app) },
                             onLongClick = { onLongPress(app) },
-                            onMove = { steps ->
-                                // Resolve by key so fast drags never reuse a stale index.
-                                val from = favoriteOrder.indexOfFirst { it.key == app.key }
-                                val to = (from + steps).coerceIn(0, favoriteOrder.lastIndex)
-                                if (from >= 0 && to != from) {
-                                    favoriteOrder = reorderFavorites(favoriteOrder, from, to)
-                                    true
-                                } else {
-                                    false
-                                }
-                            },
                             onMoveUp = {
                                 val from = favoriteOrder.indexOfFirst { it.key == app.key }
-                                if (from >= 0) {
+                                if (from > 0) {
                                     favoriteOrder = reorderFavorites(favoriteOrder, from, from - 1)
                                     onFavoriteMoved(favoriteOrder.map { it.key })
                                 }
                             },
                             onMoveDown = {
                                 val from = favoriteOrder.indexOfFirst { it.key == app.key }
-                                if (from >= 0) {
+                                if (from in 0 until favoriteOrder.lastIndex) {
                                     favoriteOrder = reorderFavorites(favoriteOrder, from, from + 1)
                                     onFavoriteMoved(favoriteOrder.map { it.key })
                                 }
                             },
-                            onMoveEnd = {
-                                draggingFavorite = null
-                                onFavoriteMoved(favoriteOrder.map { it.key })
-                            },
-                            // Placement animations lag behind a fast drag, so the list snaps
-                            // while a row is lifted; only the drop is left to settle.
-                            modifier = if (draggingFavorite != null) {
-                                Modifier.zIndex(if (draggingFavorite == app.key) 1f else 0f)
+                            // No placement animation while lifted, so slots snap instead of lagging.
+                            modifier = if (dragKey != null) {
+                                Modifier.zIndex(if (lifted) 1f else 0f)
                             } else {
                                 Modifier.animateItem()
                             },
