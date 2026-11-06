@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
@@ -29,6 +30,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.derivedStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
@@ -47,15 +49,22 @@ import dev.tom.cascade.util.AppSection
 import dev.tom.cascade.util.HomeEntry
 import dev.tom.cascade.util.activeLetter
 import dev.tom.cascade.util.jumpTarget
+import dev.tom.cascade.util.moveFavorite
 import dev.tom.cascade.util.railLetterFor
 import dev.tom.cascade.util.railLetters
 import kotlinx.coroutines.launch
+
+private fun reorderFavorites(list: List<AppEntry>, from: Int, to: Int): List<AppEntry> {
+    val byKey = list.associateBy { it.key }
+    return moveFavorite(list.map { it.key }, from, to).mapNotNull(byKey::get)
+}
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun HomeScreen(
     sections: List<AppSection>,
     favorites: List<AppEntry>,
+    onFavoriteMoved: (List<String>) -> Unit = {},
     showBanner: Boolean,
     onDismissBanner: () -> Unit,
     onSetDefault: () -> Unit,
@@ -81,6 +90,7 @@ fun HomeScreen(
     onClockLongPress: () -> Unit = {},
 ) {
     val scope = rememberCoroutineScope()
+    var favoriteOrder by remember(favorites) { mutableStateOf(favorites) }
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -179,14 +189,26 @@ fun HomeScreen(
                                 .padding(horizontal = 20.dp, vertical = 8.dp),
                         )
                     }
-                    items(favorites, key = { "fav:${it.key}" }) { app ->
-                        AppRow(
+                    itemsIndexed(favoriteOrder, key = { _, app -> "fav:${app.key}" }) { index, app ->
+                        FavoriteRow(
                             app = app,
                             icon = remember(app.key, iconSizeDp) { iconFor(app) },
                             iconSizeDp = iconSizeDp,
                             hasNotification = app.packageName in notifiedPackages,
                             onClick = { onLaunch(app) },
                             onLongClick = { onLongPress(app) },
+                            onMove = { steps ->
+                                favoriteOrder = reorderFavorites(favoriteOrder, index, index + steps)
+                            },
+                            onMoveUp = {
+                                favoriteOrder = reorderFavorites(favoriteOrder, index, index - 1)
+                                onFavoriteMoved(favoriteOrder.map { it.key })
+                            },
+                            onMoveDown = {
+                                favoriteOrder = reorderFavorites(favoriteOrder, index, index + 1)
+                                onFavoriteMoved(favoriteOrder.map { it.key })
+                            },
+                            onMoveEnd = { onFavoriteMoved(favoriteOrder.map { it.key }) },
                         )
                     }
                 }
