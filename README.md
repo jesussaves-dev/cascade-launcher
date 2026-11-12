@@ -7,12 +7,12 @@
 **A calm, fast Android launcher.**<br>
 One column of apps, a clock, and nothing that wants your attention.
 
-[![Release](https://img.shields.io/github/v/release/jesussaves-ai/cascade-launcher?style=flat-square&color=62C3DB&labelColor=0F1B22)](https://github.com/jesussaves-ai/cascade-launcher/releases/latest)
+[![Release](https://img.shields.io/github/v/release/jesussaves-dev/cascade-launcher?style=flat-square&color=62C3DB&labelColor=0F1B22)](https://github.com/jesussaves-dev/cascade-launcher/releases/latest)
 [![Android 8.0+](https://img.shields.io/badge/android-8.0%2B-62C3DB?style=flat-square&logo=android&logoColor=white&labelColor=0F1B22)](https://developer.android.com)
 [![Kotlin · Compose](https://img.shields.io/badge/kotlin-compose-62C3DB?style=flat-square&logo=kotlin&logoColor=white&labelColor=0F1B22)](https://kotlinlang.org)
 [![MIT](https://img.shields.io/badge/licence-MIT-62C3DB?style=flat-square&labelColor=0F1B22)](LICENSE)
 
-[**Download the APK**](https://github.com/jesussaves-ai/cascade-launcher/releases/latest) · [Themes](#seven-themes) · [Features](#features) · [Privacy](#privacy) · [Build](#build)
+[**Download the APK**](https://github.com/jesussaves-dev/cascade-launcher/releases/latest) · [Themes](#seven-themes) · [Features](#features) · [Privacy](#privacy) · [Build](#build)
 
 </div>
 
@@ -57,7 +57,7 @@ Original and Index let you pick one of six accent colours. The other themes set 
 
 ## Install
 
-1. Download `cascade-<version>.apk` from the [latest release](https://github.com/jesussaves-ai/cascade-launcher/releases/latest).
+1. Download `cascade-<version>.apk` from the [latest release](https://github.com/jesussaves-dev/cascade-launcher/releases/latest).
 2. Open it on the phone and allow installs from that source when Android asks.
 3. Press Home, then choose **Cascade** and **Always**.
 
