@@ -1,64 +1,79 @@
 <div align="center">
 
+<img src="screenshots/home.png" width="300" alt="Cascade home screen in the Index theme">
+
 # Cascade
 
-**A calm, fast Android launcher.**
-Vertical apps, pop-up folders, icon packs, notification dots, weather and a quiet header — no ads, no accounts, no analytics.
+**A calm, fast Android launcher.**<br>
+One column of apps, a clock, and nothing that wants your attention.
 
-[![Release](https://img.shields.io/github/v/release/jesussaves-ai/cascade-launcher?style=flat-square)](https://github.com/jesussaves-ai/cascade-launcher/releases)
-[![Licence](https://img.shields.io/badge/licence-MIT-blue?style=flat-square)](LICENSE)
-[![Ko-fi](https://img.shields.io/badge/buy_me_a_coffee-ko--fi-ff5e5b?style=flat-square&logo=kofi&logoColor=white)](https://ko-fi.com/jesussavesai)
-[![Android](https://img.shields.io/badge/android-8.0%2B-3ddc84?style=flat-square&logo=android&logoColor=white)](https://developer.android.com)
-[![Kotlin](https://img.shields.io/badge/kotlin-compose-7f52ff?style=flat-square&logo=kotlin&logoColor=white)](https://kotlinlang.org)
+[![Release](https://img.shields.io/github/v/release/jesussaves-ai/cascade-launcher?style=flat-square&color=62C3DB&labelColor=0F1B22)](https://github.com/jesussaves-ai/cascade-launcher/releases/latest)
+[![Android 8.0+](https://img.shields.io/badge/android-8.0%2B-62C3DB?style=flat-square&logo=android&logoColor=white&labelColor=0F1B22)](https://developer.android.com)
+[![Kotlin · Compose](https://img.shields.io/badge/kotlin-compose-62C3DB?style=flat-square&logo=kotlin&logoColor=white&labelColor=0F1B22)](https://kotlinlang.org)
+[![MIT](https://img.shields.io/badge/licence-MIT-62C3DB?style=flat-square&labelColor=0F1B22)](LICENSE)
+
+[**Download the APK**](https://github.com/jesussaves-ai/cascade-launcher/releases/latest) · [Themes](#seven-themes) · [Features](#features) · [Privacy](#privacy) · [Build](#build)
 
 </div>
 
-<p align="center">
-  <img src="screenshots/home.png" width="270" alt="Home screen">
-  <img src="screenshots/search.png" width="270" alt="Search">
-  <img src="screenshots/settings.png" width="270" alt="Settings">
-</p>
+<br>
 
-Cascade is an independent, open-source launcher. It is inspired by the
-*workflow* of Niagara Launcher — a one-handed vertical list with a wave
-alphabet — and contains no code, assets, strings or resources from any
-third-party launcher.
+> No ads. No account. No analytics. The only network request it can make is an optional weather lookup.
 
-## Why it exists
+## Seven themes
 
-Most launchers want an account, a feed, or your attention. Cascade wants a
-single column of apps, a clock, and to get out of the way.
+Each theme changes the type, colours, clock, search field, section headers and alphabet rail. You choose one in **Settings → Appearance → Theme**.
 
-- **No ads, no tracking, no account.** Nothing leaves the device except an
-  optional weather lookup.
-- **One column, one thumb.** Apps, favourites and folders in a single
-  scrolling list with a letter rail on the right.
-- **Small on purpose.** About 5k lines of Kotlin and Compose, no bundled SDKs.
+<table>
+  <tr>
+    <td align="center"><img src="screenshots/themes/index.png" width="200" alt="Index theme"><br><b>Index</b><br><sub>A book's index. Tall condensed clock, serif names, large initials.</sub></td>
+    <td align="center"><img src="screenshots/themes/original.png" width="200" alt="Original theme"><br><b>Original</b><br><sub>Cascade 1.0. Roboto, a search pill, the rail on a strip.</sub></td>
+    <td align="center"><img src="screenshots/themes/rubric-light.png" width="200" alt="Rubric theme"><br><b>Rubric</b><br><sub>A prayer book. Garamond, with initials printed in red.</sub></td>
+    <td align="center"><img src="screenshots/themes/pixel.png" width="200" alt="Pixel theme"><br><b>Pixel</b><br><sub>Pixel type, amber on green-black, boxed search.</sub></td>
+  </tr>
+  <tr>
+    <td align="center"><img src="screenshots/themes/tide.png" width="200" alt="Tide theme"><br><b>Tide</b><br><sub>The time in words, over deep water.</sub></td>
+    <td align="center"><img src="screenshots/themes/night-watch.png" width="200" alt="Night watch theme"><br><b>Night watch</b><br><sub>OLED black and dim red, icons included. Dark only.</sub></td>
+    <td align="center"><img src="screenshots/themes/paper.png" width="200" alt="Paper theme"><br><b>Paper</b><br><sub>Black on white for e-ink and bright sun. Light only.</sub></td>
+    <td></td>
+  </tr>
+</table>
+
+Original and Index let you pick one of six accent colours. The other themes set their own. Every theme except Night watch and Paper has a light and a dark palette.
 
 ## Features
 
-- Vertical A–Z list with sticky letter headers and a `#` bucket
-- Favourites: long-press to pin, drag to reorder, no limit
-- Wave alphabet rail with a star that jumps to favourites; empty letters dimmed
-- Pop-up folders: create from a long-press, 2×2 preview, 4-column popup
-- Search: apps, optional contacts, and a “search the web” row
-- Notification dots and a live notification list in the long-press sheet
-- ADW icon packs, per-app icon overrides, and a letter tile when an icon is missing
-- Large clock, optional weather and a daily KJV verse
-- System widgets under the clock
-- Wallpaper behind a readable scrim; long-press the clock to change it
-- Double-tap the clock to lock (optional device admin)
-- Light, dark or system theme, six accents, adjustable icon size
-- Hidden apps, app info, uninstall from the long-press sheet
+|  |  |
+| --- | --- |
+| **List** | A–Z apps with sticky letter headers, a `#` bucket and a wave alphabet rail. Letters with no apps are dimmed. |
+| **Favourites** | Long-press an app to pin it, drag to reorder, no limit. The star on the rail jumps back to them. |
+| **Folders** | Pop-up folders with a 2×2 preview, created from the long-press sheet. |
+| **Search** | Apps, optional contacts, and a "search the web" row. |
+| **Notifications** | Dots on apps and a live notification list in the long-press sheet. |
+| **Icons** | ADW icon packs, per-app icon overrides, and a letter tile when an icon is missing. Icon size is adjustable. |
+| **Header** | A large clock, optional weather and a daily KJV verse. System widgets sit under it. |
+| **Gestures** | Double-tap the clock to lock the screen (optional device admin). Long-press it to change the wallpaper. |
+| **Housekeeping** | Hide apps, open app info and uninstall from the long-press sheet. |
 
 ## Install
 
-1. Download the latest `cascade-<version>.apk` from
-   [Releases](https://github.com/jesussaves-ai/cascade-launcher/releases).
-2. Open it on the phone and allow install from an unknown source when prompted.
-3. Press Home and choose **Cascade**, then **Always**.
+1. Download `cascade-<version>.apk` from the [latest release](https://github.com/jesussaves-ai/cascade-launcher/releases/latest).
+2. Open it on the phone and allow installs from that source when Android asks.
+3. Press Home, then choose **Cascade** and **Always**.
 
-Requires Android 8.0 (API 26) or newer. Tested on Android 17.
+Needs Android 8.0 (API 26) or newer. Tested on Android 17 (Pixel Fold).
+
+## Privacy
+
+| Data | Where it goes |
+| --- | --- |
+| Apps, favourites, folders, settings | Local preferences only |
+| Notifications | Memory only, never written to disk |
+| Contacts (optional) | Memory only, cleared when turned off |
+| Weather (optional) | The city name is sent to Open-Meteo |
+| Analytics, ads, accounts | None |
+
+Cascade declares `INTERNET` only for the weather lookup.
 
 ## Build
 
@@ -70,23 +85,10 @@ export ANDROID_HOME=$HOME/Android/Sdk
 ./gradlew testDebugUnitTest    # JVM tests
 ```
 
-`keystore.properties` (git-ignored) needs `storeFile`, `storePassword`,
-`keyAlias` and `keyPassword`.
+`keystore.properties` is git-ignored. It needs `storeFile`, `storePassword`, `keyAlias` and `keyPassword`.
 
-## Privacy
-
-| Data | Where it goes |
-| --- | --- |
-| Apps, favourites, folders, settings | Local preferences only |
-| Notifications | Memory only, never written to disk |
-| Contacts (optional) | Memory only, cleared when turned off |
-| Weather (optional) | Sent to Open-Meteo as a city name |
-| Analytics / ads / accounts | None |
-
-Cascade declares `INTERNET` for the optional weather lookup, nothing else it
-does touches the network.
-
-## Project layout
+<details>
+<summary><b>Project layout</b></summary>
 
 ```
 app/src/main/java/dev/tom/cascade/
@@ -96,19 +98,26 @@ app/src/main/java/dev/tom/cascade/
 ├── model/          app, folder, contact, weather and verse models
 ├── notifications/  notification listener, store and flags
 ├── ui/             Compose screens, dialogs and gestures
+│   └── theme/      the seven themes: palettes, fonts and HomeStyle
 └── util/           pure sorting, search, clock and formatting helpers
 ```
 
-Logic that can be tested without Android lives in `util/`, `data/` codecs and
-`iconpack/` parsers, with JVM tests beside them.
+Code that runs without Android lives in `util/`, the `data/` codecs and the `iconpack/` parsers. Their JVM tests mirror that layout under `app/src/test/`.
+
+</details>
+
+## Credits
+
+Cascade takes its workflow from Niagara Launcher: a one-handed vertical list with a wave alphabet. It contains no code, assets, strings or resources from any other launcher.
+
+The bundled fonts are Big Shoulders Display, Newsreader, Cormorant Garamond, Pixelify Sans, Outfit, Barlow Condensed and Atkinson Hyperlegible. All are under the SIL Open Font License, and the licence texts are in [`app/src/main/assets/licenses`](app/src/main/assets/licenses).
 
 ## Support
 
-Cascade is free, with no ads, no paywalls and no tracking. If it earns a place
-on your home screen and you feel like saying thanks, you can buy me a coffee:
+Cascade is free, with no ads and no paywalls. If you'd like to say thanks:
 
-[![Buy me a coffee](https://img.shields.io/badge/%E2%98%95_Buy_me_a_coffee-ko--fi-ff5e5b?style=flat-square)](https://ko-fi.com/jesussavesai)
+<a href="https://ko-fi.com/jesussavesai"><img src="https://img.shields.io/badge/%E2%98%95_buy_me_a_coffee-ko--fi-ff5e5b?style=for-the-badge&labelColor=0F1B22" alt="Buy me a coffee on Ko-fi"></a>
 
 ## Licence
 
-MIT — see [LICENSE](LICENSE).
+MIT. See [LICENSE](LICENSE).
