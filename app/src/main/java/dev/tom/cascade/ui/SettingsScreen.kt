@@ -49,17 +49,21 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.graphics.ImageBitmap
+import dev.tom.cascade.data.HomeTheme
 import dev.tom.cascade.data.ThemeMode
 import dev.tom.cascade.model.AppEntry
 import dev.tom.cascade.iconpack.IconPackInfo
 import dev.tom.cascade.model.Place
-import dev.tom.cascade.ui.theme.AccentColors
+import dev.tom.cascade.ui.theme.accentChoices
+import dev.tom.cascade.ui.theme.fixedMode
+import dev.tom.cascade.ui.theme.style
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingsScreen(
     theme: ThemeMode,
+    homeTheme: HomeTheme,
     accentIndex: Int,
     iconSizeDp: Int,
     hiddenApps: List<AppEntry>,
@@ -86,6 +90,7 @@ fun SettingsScreen(
     adminActive: Boolean,
     onToggleAdmin: () -> Unit,
     onTheme: (ThemeMode) -> Unit,
+    onHomeTheme: (HomeTheme) -> Unit,
     onAccent: (Int) -> Unit,
     onIconSize: (Int) -> Unit,
     onUnhide: (String) -> Unit,
@@ -116,24 +121,73 @@ fun SettingsScreen(
         ) {
             SectionTitle("Appearance")
 
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                RadioButton(selected = theme == ThemeMode.SYSTEM, onClick = { onTheme(ThemeMode.SYSTEM) })
-                Text("Follow system")
+            Text("Theme", style = MaterialTheme.typography.bodyLarge)
+            HomeTheme.entries.forEach { option ->
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable { onHomeTheme(option) }
+                        .padding(vertical = 4.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    RadioButton(selected = homeTheme == option, onClick = { onHomeTheme(option) })
+                    Column {
+                        // Each name is set in its own theme's app-label face.
+                        Text(option.title, style = option.style().appLabel)
+                        Text(
+                            option.blurb,
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
+                }
             }
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                RadioButton(selected = theme == ThemeMode.LIGHT, onClick = { onTheme(ThemeMode.LIGHT) })
-                Text("Light")
+
+            Spacer(Modifier.height(16.dp))
+            val fixedMode = homeTheme.fixedMode()
+            Text("Light and dark", style = MaterialTheme.typography.bodyLarge)
+            if (fixedMode != null) {
+                Text(
+                    "$fixedMode in ${homeTheme.title}",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
             }
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                RadioButton(selected = theme == ThemeMode.DARK, onClick = { onTheme(ThemeMode.DARK) })
-                Text("Dark")
+            listOf(
+                ThemeMode.SYSTEM to "Follow system",
+                ThemeMode.LIGHT to "Light",
+                ThemeMode.DARK to "Dark",
+            ).forEach { (mode, label) ->
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    RadioButton(
+                        selected = theme == mode,
+                        onClick = { onTheme(mode) },
+                        enabled = fixedMode == null,
+                    )
+                    Text(
+                        label,
+                        color = if (fixedMode == null) {
+                            MaterialTheme.colorScheme.onSurface
+                        } else {
+                            MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f)
+                        },
+                    )
+                }
             }
 
             Spacer(Modifier.height(16.dp))
             Text("Accent colour", style = MaterialTheme.typography.bodyLarge)
             Spacer(Modifier.height(8.dp))
-            Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                AccentColors.forEachIndexed { index, color ->
+            val accents = homeTheme.accentChoices()
+            if (accents == null) {
+                Text(
+                    "Set by ${homeTheme.title}",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+            if (accents != null) Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                accents.forEachIndexed { index, color ->
                     val selected = index == accentIndex
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         Box(
@@ -490,3 +544,25 @@ private fun SectionTitle(text: String) {
         modifier = Modifier.padding(vertical = 8.dp),
     )
 }
+
+private val HomeTheme.title: String
+    get() = when (this) {
+        HomeTheme.ORIGINAL -> "Original"
+        HomeTheme.INDEX -> "Index"
+        HomeTheme.RUBRIC -> "Rubric"
+        HomeTheme.PIXEL -> "Pixel"
+        HomeTheme.TIDE -> "Tide"
+        HomeTheme.NIGHT_WATCH -> "Night watch"
+        HomeTheme.PAPER -> "Paper"
+    }
+
+private val HomeTheme.blurb: String
+    get() = when (this) {
+        HomeTheme.ORIGINAL -> "Cascade 1.0: Roboto, search pill, rail strip"
+        HomeTheme.INDEX -> "A book's index: tall clock, serif names, large initials"
+        HomeTheme.RUBRIC -> "A prayer book: Garamond with red initials"
+        HomeTheme.PIXEL -> "Pixel type and amber on green-black"
+        HomeTheme.TIDE -> "The time in words over deep water"
+        HomeTheme.NIGHT_WATCH -> "Black and dim red for bedside use"
+        HomeTheme.PAPER -> "Black on white, for e-ink and bright sun"
+    }

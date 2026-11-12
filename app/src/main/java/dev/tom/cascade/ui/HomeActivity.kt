@@ -106,6 +106,7 @@ class HomeActivity : ComponentActivity() {
             val hidden by prefs.hidden.collectAsStateWithLifecycle()
             val theme by prefs.theme.collectAsStateWithLifecycle()
             val accent by prefs.accentIndex.collectAsStateWithLifecycle()
+            val homeTheme by prefs.homeTheme.collectAsStateWithLifecycle()
             val iconSizeDp by prefs.iconSizeDp.collectAsStateWithLifecycle()
             val bannerDismissed by prefs.bannerDismissed.collectAsStateWithLifecycle()
             val showPreviews by prefs.showNotificationPreviews.collectAsStateWithLifecycle()
@@ -233,13 +234,14 @@ class HomeActivity : ComponentActivity() {
                 }
             }
 
-            CascadeTheme(mode = theme, accentIndex = accent) {
+            CascadeTheme(mode = theme, accentIndex = accent, homeTheme = homeTheme) {
                 key(activeIconPack, packVersion, iconOverrides) {
                 when {
                     showSettings -> {
                         BackHandler { showSettings = false }
                         SettingsScreen(
                             theme = theme,
+                            homeTheme = homeTheme,
                             accentIndex = accent,
                             iconSizeDp = iconSizeDp,
                             hiddenApps = allApps.filter { it.key in hidden },
@@ -282,6 +284,7 @@ class HomeActivity : ComponentActivity() {
                             adminActive = adminActive,
                             onToggleAdmin = { requestDeviceAdmin(this@HomeActivity) },
                             onTheme = prefs::setTheme,
+                            onHomeTheme = prefs::setHomeTheme,
                             onAccent = prefs::setAccent,
                             onIconSize = prefs::setIconSize,
                             onUnhide = prefs::unhide,

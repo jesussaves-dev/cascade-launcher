@@ -24,6 +24,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.foundation.Image
 import dev.tom.cascade.model.AppEntry
+import dev.tom.cascade.ui.theme.LocalHomeStyle
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
@@ -41,14 +42,15 @@ fun AppRow(
         modifier = modifier
             .fillMaxWidth()
             .then(if (interactive) Modifier.combinedClickable(onClick = onClick, onLongClick = onLongClick) else Modifier)
-            .padding(horizontal = 20.dp, vertical = 8.dp),
+            .padding(horizontal = 20.dp, vertical = LocalHomeStyle.current.rowPadding),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         AppIcon(icon = icon, label = app.label, sizeDp = iconSizeDp)
-        Spacer(Modifier.width(16.dp))
+        Spacer(Modifier.width(LocalHomeStyle.current.iconGap))
         Text(
             text = app.label,
-            style = MaterialTheme.typography.bodyLarge,
+            style = LocalHomeStyle.current.appLabel,
+            color = MaterialTheme.colorScheme.onBackground,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
             modifier = Modifier.weight(1f),
@@ -56,8 +58,8 @@ fun AppRow(
         if (hasNotification) {
             Box(
                 modifier = Modifier
-                    .padding(start = 8.dp)
-                    .size(6.dp)
+                    .padding(start = 12.dp)
+                    .size(7.dp)
                     .background(MaterialTheme.colorScheme.primary, CircleShape),
             )
         }

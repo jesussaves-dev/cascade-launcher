@@ -13,6 +13,9 @@ import java.util.UUID
 
 enum class ThemeMode { SYSTEM, LIGHT, DARK }
 
+/** The home screen's look. Original is Cascade 1.0; Index is the book-index redesign. */
+enum class HomeTheme { ORIGINAL, INDEX, RUBRIC, PIXEL, TIDE, NIGHT_WATCH, PAPER }
+
 class Prefs(context: Context) {
     private val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
 
@@ -36,6 +39,13 @@ class Prefs(context: Context) {
             ?: ThemeMode.SYSTEM
     )
     val theme: StateFlow<ThemeMode> = _theme.asStateFlow()
+
+    private val _homeTheme = MutableStateFlow(
+        prefs.getString(KEY_HOME_THEME, null)
+            ?.let { runCatching { HomeTheme.valueOf(it) }.getOrNull() }
+            ?: HomeTheme.INDEX
+    )
+    val homeTheme: StateFlow<HomeTheme> = _homeTheme.asStateFlow()
 
     private val _accentIndex = MutableStateFlow(prefs.getInt(KEY_ACCENT, 0))
     val accentIndex: StateFlow<Int> = _accentIndex.asStateFlow()
@@ -156,6 +166,11 @@ class Prefs(context: Context) {
         prefs.edit().putString(KEY_THEME, mode.name).apply()
     }
 
+    fun setHomeTheme(theme: HomeTheme) {
+        _homeTheme.value = theme
+        prefs.edit().putString(KEY_HOME_THEME, theme.name).apply()
+    }
+
     fun setAccent(index: Int) {
         _accentIndex.value = index
         prefs.edit().putInt(KEY_ACCENT, index).apply()
@@ -269,6 +284,7 @@ class Prefs(context: Context) {
         private const val KEY_HIDDEN = "hidden"
         private const val KEY_THEME = "theme"
         private const val KEY_ACCENT = "accent"
+        private const val KEY_HOME_THEME = "home_theme"
         private const val KEY_ICON_SIZE = "icon_size"
         private const val KEY_BANNER_DISMISSED = "banner_dismissed"
         private const val KEY_BUTTON_TAP = "button_tap"

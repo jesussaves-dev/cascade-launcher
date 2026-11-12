@@ -25,7 +25,11 @@ import androidx.compose.ui.semantics.customActions
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.layout.widthIn
+import dev.tom.cascade.ui.theme.LocalHomeStyle
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleEventEffect
@@ -34,6 +38,7 @@ import dev.tom.cascade.model.Weather
 import dev.tom.cascade.util.formatClockDate
 import dev.tom.cascade.data.kjvVerses
 import dev.tom.cascade.util.formatClockTime
+import dev.tom.cascade.util.formatClockWords
 import dev.tom.cascade.util.formatTemperature
 import dev.tom.cascade.util.verseForDay
 import kotlinx.coroutines.delay
@@ -85,52 +90,93 @@ fun ClockHeader(
                     onLongPress = { onLongPress() },
                 )
             }
-            .padding(horizontal = 20.dp, vertical = if (compact) 8.dp else 16.dp),
+            .padding(start = 20.dp, end = 20.dp, top = if (compact) 4.dp else 8.dp, bottom = if (compact) 8.dp else 20.dp),
     ) {
+        val style = LocalHomeStyle.current
         Text(
-            text = formatClockTime(local.hour, local.minute, DateFormat.is24HourFormat(context)),
-            style = if (compact) MaterialTheme.typography.titleLarge else MaterialTheme.typography.displayLarge,
+            text = if (style.clockInWords) {
+                formatClockWords(local.hour, local.minute)
+            } else {
+                formatClockTime(local.hour, local.minute, DateFormat.is24HourFormat(context))
+            },
+            style = if (compact) style.clockCompact else style.clock,
+            color = MaterialTheme.colorScheme.onBackground,
+            modifier = Modifier.offset(x = style.clockNudge),
         )
         if (!compact) {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.padding(top = 2.dp),
             ) {
                 Text(
                     text = formatClockDate(now),
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    style = style.date,
+                    // 1.0 (the only non-epigraph theme) muted the date.
+                    color = if (style.verseAsEpigraph) {
+                        MaterialTheme.colorScheme.onBackground
+                    } else {
+                        MaterialTheme.colorScheme.onSurfaceVariant
+                    },
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                     modifier = Modifier.weight(1f, fill = false),
                 )
                 if (showWeather && weather != null) {
-                    Spacer(Modifier.width(8.dp))
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        WeatherGlyphIcon(glyph = glyphFor(weather.code))
-                        Spacer(Modifier.width(4.dp))
-                        Text(
-                            text = formatTemperature(weather.temperatureC, fahrenheit),
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        )
-                    }
+                    Spacer(Modifier.width(14.dp))
+                    WeatherGlyphIcon(glyph = glyphFor(weather.code))
+                    Spacer(Modifier.width(4.dp))
+                    Text(
+                        text = formatTemperature(weather.temperatureC, fahrenheit),
+                        style = style.date,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
                 }
             }
-            if (verse != null) {
+            val referenceColor = if (style.referenceInAccent) {
+                MaterialTheme.colorScheme.primary
+            } else {
+                MaterialTheme.colorScheme.onSurfaceVariant
+            }
+            if (verse != null && !style.verseAsEpigraph) {
+                // 1.0: the reference as a small label above the text.
                 Text(
                     text = verse.reference,
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.primary,
+                    style = style.verseReference,
+                    color = referenceColor,
                     modifier = Modifier.padding(top = 6.dp),
                 )
                 Text(
                     text = verse.text,
-                    style = MaterialTheme.typography.bodySmall,
+                    style = style.verse,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     maxLines = 3,
                     overflow = TextOverflow.Ellipsis,
                     modifier = Modifier.padding(top = 2.dp),
                 )
+            } else if (verse != null) {
+                // Set as an epigraph: italic text, reference hung beneath on the right.
+                Column(
+                    modifier = Modifier
+                        .padding(top = 20.dp)
+                        .widthIn(max = 340.dp),
+                ) {
+                    Text(
+                        text = verse.text,
+                        style = style.verse,
+                        color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.86f),
+                        maxLines = 4,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                    Text(
+                        text = "\u2013 ${verse.reference}",
+                        style = style.verseReference,
+                        color = referenceColor,
+                        textAlign = TextAlign.End,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(top = 6.dp),
+                    )
+                }
             }
         }
     }

@@ -1,5 +1,7 @@
 package dev.tom.cascade.ui
 
+import dev.tom.cascade.ui.theme.LocalHomeStyle
+
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
@@ -34,6 +36,7 @@ fun AppIcon(
         Image(
             bitmap = icon,
             contentDescription = null,
+            colorFilter = LocalHomeStyle.current.iconFilter,
             modifier = modifier.size(sizeDp.dp).clip(shape),
         )
     } else {

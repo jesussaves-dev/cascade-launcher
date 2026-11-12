@@ -20,6 +20,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import dev.tom.cascade.ui.theme.LocalHomeStyle
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.text.style.TextOverflow
@@ -40,14 +41,15 @@ fun FolderRow(
         modifier = Modifier
             .fillMaxWidth()
             .combinedClickable(onClick = onClick, onLongClick = onLongClick)
-            .padding(horizontal = 20.dp, vertical = 8.dp),
+            .padding(horizontal = 20.dp, vertical = LocalHomeStyle.current.rowPadding),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         FolderPreview(apps = apps.take(4), iconFor = iconFor)
-        Spacer(Modifier.width(16.dp))
+        Spacer(Modifier.width(LocalHomeStyle.current.iconGap))
         Text(
             text = folder.name,
-            style = MaterialTheme.typography.bodyLarge,
+            style = LocalHomeStyle.current.appLabel,
+            color = MaterialTheme.colorScheme.onBackground,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
         )

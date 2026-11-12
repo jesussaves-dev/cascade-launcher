@@ -13,6 +13,9 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.padding
+import dev.tom.cascade.ui.theme.LocalHomeStyle
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.Icon
@@ -34,7 +37,6 @@ import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import kotlin.math.exp
@@ -55,18 +57,28 @@ fun AlphabetRail(
     val maxLetterSize = with(density) {
         (railHeight.toFloat() / letters.size).toSp()
     }
-    val letterSize = if (maxLetterSize.value < 10f) maxLetterSize else 10.sp
+    val style = LocalHomeStyle.current
+    val letterSize = if (maxLetterSize.value < style.railMaxSize.value) maxLetterSize else style.railMaxSize
+    // The 1.0 rail sits on a strip with muted letters and a bold active one.
+    val strip = style.railStrip
 
     Column(
         modifier = modifier
             .width(34.dp)
             .fillMaxHeight()
-            .background(MaterialTheme.colorScheme.background.copy(alpha = 0.85f)),
+            .then(
+                if (strip) {
+                    Modifier.background(MaterialTheme.colorScheme.background.copy(alpha = 0.85f))
+                } else {
+                    Modifier
+                },
+            )
+            .padding(vertical = 8.dp),
     ) {
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(28.dp)
+                .height(32.dp)
                 .clickable(onClick = onFavorites)
                 .semantics { contentDescription = "Favorites" },
             contentAlignment = Alignment.Center,
@@ -130,18 +142,19 @@ fun AlphabetRail(
                             scaleX = scale
                             scaleY = scale
                         }
-                        .alpha(if (present) 1f else 0.35f),
+                        .alpha(if (present) 1f else 0.3f),
                     contentAlignment = Alignment.Center,
                 ) {
                     Text(
                         text = letter,
+                        style = style.rail,
                         fontSize = letterSize,
                         lineHeight = letterSize,
-                        fontWeight = if (isActive) FontWeight.Bold else FontWeight.Medium,
-                        color = if (isActive) {
-                            MaterialTheme.colorScheme.primary
-                        } else {
-                            MaterialTheme.colorScheme.onSurfaceVariant
+                        fontWeight = if (strip && isActive) FontWeight.Bold else null,
+                        color = when {
+                            isActive -> MaterialTheme.colorScheme.primary
+                            strip -> MaterialTheme.colorScheme.onSurfaceVariant
+                            else -> MaterialTheme.colorScheme.onBackground.copy(alpha = 0.72f)
                         },
                     )
                 }
