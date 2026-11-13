@@ -272,6 +272,28 @@ class Prefs(context: Context) {
         }.apply()
     }
 
+    private val _themedIcons = MutableStateFlow(prefs.getBoolean(KEY_THEMED_ICONS, false))
+    val themedIcons: StateFlow<Boolean> = _themedIcons.asStateFlow()
+
+    /** The theme to switch to at night, or null to keep one theme all day. */
+    private val _nightTheme = MutableStateFlow(
+        prefs.getString(KEY_NIGHT_THEME, null)
+            ?.let { runCatching { HomeTheme.valueOf(it) }.getOrNull() }
+    )
+    val nightTheme: StateFlow<HomeTheme?> = _nightTheme.asStateFlow()
+
+    fun setThemedIcons(enabled: Boolean) {
+        _themedIcons.value = enabled
+        prefs.edit().putBoolean(KEY_THEMED_ICONS, enabled).apply()
+    }
+
+    fun setNightTheme(theme: HomeTheme?) {
+        _nightTheme.value = theme
+        prefs.edit().apply {
+            if (theme == null) remove(KEY_NIGHT_THEME) else putString(KEY_NIGHT_THEME, theme.name)
+        }.apply()
+    }
+
     fun setShowVerse(enabled: Boolean) {
         _showVerse.value = enabled
         prefs.edit().putBoolean(KEY_SHOW_VERSE, enabled).apply()
@@ -299,5 +321,7 @@ class Prefs(context: Context) {
         private const val KEY_WEATHER_PLACE = "weather_place"
         private const val KEY_WEATHER_CACHE = "weather_cache"
         private const val KEY_SHOW_VERSE = "show_verse"
+        private const val KEY_THEMED_ICONS = "themed_icons"
+        private const val KEY_NIGHT_THEME = "night_theme"
     }
 }

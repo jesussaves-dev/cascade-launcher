@@ -21,6 +21,11 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxScope
+import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -116,7 +121,7 @@ fun HomeScreen(
     var dragRowHeight by remember { mutableFloatStateOf(0f) }
     val style = LocalHomeStyle.current
     val ground = style.ground
-    Box(
+    BoxWithConstraints(
         modifier = Modifier
             .fillMaxSize()
             .then(
@@ -128,13 +133,9 @@ fun HomeScreen(
             )
             .windowInsetsPadding(WindowInsets.safeDrawing),
     ) {
-        Box(
-            modifier = Modifier
-                .widthIn(max = 640.dp)
-                .fillMaxSize()
-                .align(Alignment.TopCenter),
-        ) {
-    Column(modifier = Modifier.fillMaxSize().padding(end = 44.dp)) {
+        // An unfolded Fold (or a phone on its side) gets two pages: clock left, apps right.
+        val twoPane = maxWidth >= TwoPaneMinWidth
+        val searchBar: @Composable () -> Unit = {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -194,6 +195,8 @@ fun HomeScreen(
             }
         }
 
+        }
+        val banner: @Composable () -> Unit = {
         if (showBanner) {
             Row(
                 modifier = Modifier
@@ -214,6 +217,8 @@ fun HomeScreen(
             }
         }
 
+        }
+        val header: @Composable () -> Unit = {
         ClockHeader(
             weather = weather,
             showWeather = showWeather,
@@ -223,8 +228,8 @@ fun HomeScreen(
             onLongPress = onClockLongPress,
         )
 
-        widgets()
-
+        }
+        val appList: @Composable () -> Unit = {
         if (sections.isEmpty() && favorites.isEmpty()) {
             Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                 Text("No apps found", color = MaterialTheme.colorScheme.onSurfaceVariant)
@@ -365,7 +370,8 @@ fun HomeScreen(
                 }
             }
         }
-            }
+        }
+        val rail: @Composable BoxScope.() -> Unit = {
         val presentLetters = remember(sections) {
             sections.mapNotNull { railLetterFor(it.header) }.toSet()
         }
@@ -391,8 +397,58 @@ fun HomeScreen(
             )
         }
         }
+
+        if (twoPane) {
+            Row(Modifier.fillMaxSize()) {
+                Column(
+                    modifier = Modifier
+                        .weight(1f)
+                        .fillMaxHeight()
+                        .verticalScroll(rememberScrollState())
+                        .padding(top = 24.dp),
+                ) {
+                    header()
+                    widgets()
+                }
+                // The gutter between the two pages, where the hinge runs.
+                Box(
+                    Modifier
+                        .fillMaxHeight()
+                        .padding(vertical = 32.dp)
+                        .width(1.dp)
+                        .background(MaterialTheme.colorScheme.outlineVariant),
+                )
+                Box(Modifier.weight(1f).fillMaxHeight()) {
+                    Column(Modifier.fillMaxSize().padding(end = 44.dp)) {
+                        searchBar()
+                        banner()
+                        appList()
+                    }
+                    rail()
+                }
+            }
+        } else {
+            Box(
+                modifier = Modifier
+                    .widthIn(max = 640.dp)
+                    .fillMaxSize()
+                    .align(Alignment.TopCenter),
+            ) {
+                Column(Modifier.fillMaxSize().padding(end = 44.dp)) {
+                    searchBar()
+                    banner()
+                    header()
+                    widgets()
+                    appList()
+                }
+                rail()
+            }
+        }
     }
 }
+
+/** Wide enough for two readable pages; the Fold's inner screen and most phones on their side. */
+private val TwoPaneMinWidth = 600.dp
 
 /** A section's letter in the theme's manner: 1.0 label, large initial, `> A` prompt, or ruled. */
 @Composable

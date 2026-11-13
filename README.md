@@ -12,7 +12,7 @@ One column of apps, a clock, and nothing that wants your attention.
 [![Kotlin · Compose](https://img.shields.io/badge/kotlin-compose-62C3DB?style=flat-square&logo=kotlin&logoColor=white&labelColor=0F1B22)](https://kotlinlang.org)
 [![MIT](https://img.shields.io/badge/licence-MIT-62C3DB?style=flat-square&labelColor=0F1B22)](LICENSE)
 
-[**Download the APK**](https://github.com/jesussaves-dev/cascade-launcher/releases/latest) · [Themes](#seven-themes) · [Features](#features) · [Privacy](#privacy) · [Build](#build)
+[**Download the APK**](https://github.com/jesussaves-dev/cascade-launcher/releases/latest) · [Themes](#seven-themes) · [Foldables](#foldables) · [Features](#features) · [Privacy](#privacy) · [Build](#build)
 
 </div>
 
@@ -41,6 +41,16 @@ Each theme changes the type, colours, clock, search field, section headers and a
 
 Original and Index let you pick one of six accent colours. The other themes set their own. Every theme except Night watch and Paper has a light and a dark palette.
 
+**At night** switches to a second theme of your choice from sunset to sunrise in your weather city, or from 9 pm to 7 am without one. The sun's position is worked out on the phone.
+
+## Foldables
+
+Unfold the phone and Cascade opens like a book: the clock, verse and widgets on the left page, your apps on the right. Any screen at least 600dp wide gets the two pages, including a phone turned on its side.
+
+<div align="center">
+<img src="screenshots/unfolded.png" width="640" alt="Cascade on an unfolded phone: clock and verse on the left page, favourites and the alphabet rail on the right">
+</div>
+
 ## Features
 
 |  |  |
@@ -50,7 +60,7 @@ Original and Index let you pick one of six accent colours. The other themes set 
 | **Folders** | Pop-up folders with a 2×2 preview, created from the long-press sheet. |
 | **Search** | Apps, optional contacts, and a "search the web" row. |
 | **Notifications** | Dots on apps and a live notification list in the long-press sheet. |
-| **Icons** | ADW icon packs, per-app icon overrides, and a letter tile when an icon is missing. Icon size is adjustable. |
+| **Icons** | ADW icon packs, per-app icon overrides, and a letter tile when an icon is missing. Icon size is adjustable. On Android 13+, themed icons redraw apps' monochrome icons in the theme's colours. |
 | **Header** | A large clock, optional weather and a daily KJV verse. System widgets sit under it. |
 | **Gestures** | Double-tap the clock to lock the screen (optional device admin). Long-press it to change the wallpaper. |
 | **Housekeeping** | Hide apps, open app info and uninstall from the long-press sheet. |

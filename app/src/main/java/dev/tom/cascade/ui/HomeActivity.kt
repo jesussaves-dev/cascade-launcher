@@ -3,22 +3,26 @@ package dev.tom.cascade.ui
 import android.Manifest
 import android.app.Activity
 import android.app.SearchManager
+import android.appwidget.AppWidgetHost
+import android.appwidget.AppWidgetManager
 import android.content.ActivityNotFoundException
 import android.content.ComponentName
 import android.content.Intent
 import android.content.pm.PackageManager
-import android.appwidget.AppWidgetHost
-import android.appwidget.AppWidgetManager
 import android.net.Uri
 import android.os.Bundle
 import android.provider.Settings
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.BackHandler
-import androidx.activity.compose.setContent
 import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
@@ -27,35 +31,36 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
+import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalDensity
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import dev.tom.cascade.CascadeApp
-import dev.tom.cascade.data.WeatherRepository
-import dev.tom.cascade.util.isFahrenheitLocale
 import dev.tom.cascade.data.ContactsRepository
+import dev.tom.cascade.data.ThemeMode
+import dev.tom.cascade.data.WeatherRepository
+import dev.tom.cascade.iconpack.overrideDrawable
 import dev.tom.cascade.model.AppEntry
 import dev.tom.cascade.model.Folder
-import dev.tom.cascade.iconpack.overrideDrawable
 import dev.tom.cascade.notifications.NotificationStore
 import dev.tom.cascade.ui.theme.CascadeTheme
 import dev.tom.cascade.util.favoriteApps
 import dev.tom.cascade.util.folderApps
 import dev.tom.cascade.util.isDefaultLauncher
 import dev.tom.cascade.util.isDeviceAdminActive
-import dev.tom.cascade.util.requestDeviceAdmin
-import dev.tom.cascade.util.lockDevice
+import dev.tom.cascade.util.isFahrenheitLocale
+import dev.tom.cascade.util.isNight
 import dev.tom.cascade.util.isNotificationListenerEnabled
+import dev.tom.cascade.util.lockDevice
 import dev.tom.cascade.util.openDefaultLauncherSettings
 import dev.tom.cascade.util.openNotificationListenerSettings
+import dev.tom.cascade.util.requestDeviceAdmin
 import dev.tom.cascade.util.sections
 import java.text.Collator
 import java.util.Locale
+import kotlinx.coroutines.delay
 
 class HomeActivity : ComponentActivity() {
     private lateinit var widgetHost: AppWidgetHost
@@ -164,14 +169,35 @@ class HomeActivity : ComponentActivity() {
             val contactList by contactsRepo.contacts.collectAsStateWithLifecycle()
             val density = LocalDensity.current.density
             val iconPx = (iconSizeDp * density).toInt()
-            val iconFor: (AppEntry) -> androidx.compose.ui.graphics.ImageBitmap? = { app ->
+            val themedIcons by prefs.themedIcons.collectAsStateWithLifecycle()
+            // Plate and ink as ARGB, or null when icons keep their own colours.
+            val iconForTint: (AppEntry, Pair<Int, Int>?) -> androidx.compose.ui.graphics.ImageBitmap? = { app, tint ->
                 val override = overrideDrawable(iconOverrides, app.key, activeIconPack)
                 (if (override != null) {
                     iconPacks.iconByDrawable(activeIconPack!!, override, iconPx)
                 } else {
                     null
-                }) ?: iconPacks.icon(app, iconPx) ?: repo.icon(app, iconPx)
+                }) ?: tint?.let { (plate, ink) -> repo.themedIcon(app, iconPx, plate, ink) }
+                    ?: iconPacks.icon(app, iconPx) ?: repo.icon(app, iconPx)
             }
+
+            val nightTheme by prefs.nightTheme.collectAsStateWithLifecycle()
+            var resumeTick by remember { mutableIntStateOf(0) }
+            LifecycleEventEffect(Lifecycle.Event.ON_RESUME) { resumeTick++ }
+            var night by remember { mutableStateOf(false) }
+            LaunchedEffect(nightTheme, place, resumeTick) {
+                if (nightTheme == null) {
+                    night = false
+                    return@LaunchedEffect
+                }
+                while (true) {
+                    val now = System.currentTimeMillis()
+                    night = isNight(now, place)
+                    delay(60_000 - now % 60_000)
+                }
+            }
+            val activeTheme = if (night) nightTheme ?: homeTheme else homeTheme
+            val activeMode = if (night) ThemeMode.DARK else theme
 
             var searching by rememberSaveable { mutableStateOf(false) }
             var showSettings by rememberSaveable { mutableStateOf(false) }
@@ -234,8 +260,14 @@ class HomeActivity : ComponentActivity() {
                 }
             }
 
-            CascadeTheme(mode = theme, accentIndex = accent, homeTheme = homeTheme) {
-                key(activeIconPack, packVersion, iconOverrides) {
+            CascadeTheme(mode = activeMode, accentIndex = accent, homeTheme = activeTheme) {
+                val iconTint = if (themedIcons) {
+                    MaterialTheme.colorScheme.surfaceVariant.toArgb() to MaterialTheme.colorScheme.primary.toArgb()
+                } else {
+                    null
+                }
+                val iconFor: (AppEntry) -> androidx.compose.ui.graphics.ImageBitmap? = { iconForTint(it, iconTint) }
+                key(activeIconPack, packVersion, iconOverrides, iconTint) {
                 when {
                     showSettings -> {
                         BackHandler { showSettings = false }
@@ -287,6 +319,10 @@ class HomeActivity : ComponentActivity() {
                             onHomeTheme = prefs::setHomeTheme,
                             onAccent = prefs::setAccent,
                             onIconSize = prefs::setIconSize,
+                            themedIcons = themedIcons,
+                            onThemedIcons = prefs::setThemedIcons,
+                            nightTheme = nightTheme,
+                            onNightTheme = prefs::setNightTheme,
                             onUnhide = prefs::unhide,
                             onSetDefault = { openDefaultLauncherSettings(this@HomeActivity) },
                             onBack = { showSettings = false },

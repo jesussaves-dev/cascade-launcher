@@ -1,5 +1,6 @@
 package dev.tom.cascade.ui
 
+import android.os.Build
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -93,12 +94,17 @@ fun SettingsScreen(
     onHomeTheme: (HomeTheme) -> Unit,
     onAccent: (Int) -> Unit,
     onIconSize: (Int) -> Unit,
+    themedIcons: Boolean,
+    onThemedIcons: (Boolean) -> Unit,
+    nightTheme: HomeTheme?,
+    onNightTheme: (HomeTheme?) -> Unit,
     onUnhide: (String) -> Unit,
     onSetDefault: () -> Unit,
     onBack: () -> Unit,
 ) {
     var choosingPack by remember { mutableStateOf(false) }
     var choosingCity by remember { mutableStateOf(false) }
+    var choosingNight by remember { mutableStateOf(false) }
 
     Scaffold(
         topBar = {
@@ -141,6 +147,29 @@ fun SettingsScreen(
                         )
                     }
                 }
+            }
+
+            Spacer(Modifier.height(16.dp))
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable { choosingNight = true }
+                    .padding(vertical = 8.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Column(Modifier.weight(1f)) {
+                    Text("At night", style = MaterialTheme.typography.bodyLarge)
+                    Text(
+                        when {
+                            nightTheme == null -> "Keep ${homeTheme.title}"
+                            place != null -> "${nightTheme.title}, sunset to sunrise in ${place.name}"
+                            else -> "${nightTheme.title}, 9 pm to 7 am. Choose a weather city to follow sunset."
+                        },
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+                Text("Change", color = MaterialTheme.colorScheme.primary)
             }
 
             Spacer(Modifier.height(16.dp))
@@ -231,6 +260,22 @@ fun SettingsScreen(
                     modifier = Modifier.weight(1f),
                 )
                 Text("Change", color = MaterialTheme.colorScheme.primary)
+            }
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                Row(
+                    modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Column(Modifier.weight(1f)) {
+                        Text("Themed icons")
+                        Text(
+                            "Apps with a monochrome icon take the theme's colours",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
+                    Switch(checked = themedIcons, onCheckedChange = onThemedIcons)
+                }
             }
 
             HorizontalDivider(Modifier.padding(vertical = 16.dp))
@@ -433,6 +478,31 @@ fun SettingsScreen(
             },
         )
     }
+    if (choosingNight) {
+        AlertDialog(
+            onDismissRequest = { choosingNight = false },
+            title = { Text("At night") },
+            text = {
+                LazyColumn(Modifier.heightIn(max = 400.dp)) {
+                    item {
+                        NightChoice("Keep ${homeTheme.title}", null, nightTheme == null) {
+                            onNightTheme(null)
+                            choosingNight = false
+                        }
+                    }
+                    items(HomeTheme.entries.filter { it != homeTheme }, key = { it.name }) { option ->
+                        NightChoice(option.title, option, nightTheme == option) {
+                            onNightTheme(option)
+                            choosingNight = false
+                        }
+                    }
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = { choosingNight = false }) { Text("Close") }
+            },
+        )
+    }
     if (choosingCity) {
         CityDialog(
             hasPlace = place != null,
@@ -566,3 +636,17 @@ private val HomeTheme.blurb: String
         HomeTheme.NIGHT_WATCH -> "Black and dim red for bedside use"
         HomeTheme.PAPER -> "Black on white, for e-ink and bright sun"
     }
+
+@Composable
+private fun NightChoice(label: String, theme: HomeTheme?, selected: Boolean, onClick: () -> Unit) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick)
+            .padding(vertical = 4.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        RadioButton(selected = selected, onClick = onClick)
+        Text(label, style = theme?.style()?.appLabel ?: MaterialTheme.typography.bodyLarge)
+    }
+}
