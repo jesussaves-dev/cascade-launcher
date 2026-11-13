@@ -70,6 +70,7 @@ Unfold the phone and Cascade opens like a book: the clock, verse and widgets on 
 | **Header** | A large clock, optional weather and a daily KJV verse. System widgets sit under it. |
 | **Gestures** | Double-tap the clock to lock the screen (optional device admin). Long-press it to change the wallpaper. Swipe down for notifications and up for search, on the clock or past either end of the list; both are configurable. |
 | **Housekeeping** | Hide apps, open app info and uninstall from the long-press sheet. |
+| **Backup** | Export favourites, folders, hidden apps, themes, icon choices and gestures to a JSON file, and import them on this or another phone. Widgets stay put. |
 
 ## Install
 

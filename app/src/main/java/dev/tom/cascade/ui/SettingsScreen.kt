@@ -108,6 +108,8 @@ fun SettingsScreen(
     onSwipeDown: (SwipeAction) -> Unit,
     swipeUp: SwipeAction,
     onSwipeUp: (SwipeAction) -> Unit,
+    onExportSettings: () -> Unit,
+    onImportSettings: () -> Unit,
     nightTheme: HomeTheme?,
     onNightTheme: (HomeTheme?) -> Unit,
     onUnhide: (String) -> Unit,
@@ -476,6 +478,22 @@ fun SettingsScreen(
                         TextButton(onClick = { onUnhide(app.key) }) { Text("Unhide") }
                     }
                 }
+            }
+
+            HorizontalDivider(Modifier.padding(vertical = 16.dp))
+            SectionTitle("Backup")
+            Text(
+                "Save favourites, folders, hidden apps, themes, icon choices and gestures to a file, " +
+                    "or restore them on this or another phone. Widgets aren't included.",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+            Row(
+                modifier = Modifier.padding(top = 8.dp),
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+            ) {
+                OutlinedButton(onClick = onExportSettings) { Text("Export") }
+                OutlinedButton(onClick = onImportSettings) { Text("Import") }
             }
 
             HorizontalDivider(Modifier.padding(vertical = 16.dp))

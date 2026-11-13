@@ -1,5 +1,7 @@
 package dev.tom.cascade.ui
 
+import dev.tom.cascade.data.SettingsBackup
+import androidx.lifecycle.lifecycleScope
 import android.Manifest
 import android.app.Activity
 import android.app.SearchManager
@@ -64,11 +66,67 @@ import dev.tom.cascade.util.requestDeviceAdmin
 import dev.tom.cascade.util.sections
 import java.text.Collator
 import java.util.Locale
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 class HomeActivity : ComponentActivity() {
     private lateinit var widgetHost: AppWidgetHost
     private var pendingWidgetId = AppWidgetManager.INVALID_APPWIDGET_ID
+
+    /** A decoded backup waiting for the user to confirm it may replace their settings. */
+    private var pendingRestore by mutableStateOf<Map<String, Any>?>(null)
+
+    private val exportSettings = registerForActivityResult(
+        ActivityResultContracts.CreateDocument("application/json"),
+    ) { uri ->
+        uri ?: return@registerForActivityResult
+        val json = (application as CascadeApp).prefs.exportBackup()
+        lifecycleScope.launch {
+            val ok = withContext(Dispatchers.IO) {
+                runCatching {
+                    contentResolver.openOutputStream(uri, "wt")!!.use { it.write(json.toByteArray()) }
+                }.isSuccess
+            }
+            Toast.makeText(this@HomeActivity, if (ok) "Settings exported" else "Couldn't write the file", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    private val importSettings = registerForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
+        uri ?: return@registerForActivityResult
+        lifecycleScope.launch {
+            val result = withContext(Dispatchers.IO) {
+                runCatching {
+                    val text = contentResolver.openInputStream(uri)!!.use { input ->
+                        // Real backups are a few KB; refuse anything absurd before reading it all.
+                        val bytes = input.readNBytesCompat(MAX_BACKUP_BYTES + 1)
+                        if (bytes.size > MAX_BACKUP_BYTES) throw SettingsBackup.InvalidBackup("That file is too large to be a backup")
+                        String(bytes)
+                    }
+                    SettingsBackup.decode(text)
+                }
+            }
+            result.onSuccess { pendingRestore = it }.onFailure {
+                val message = (it as? SettingsBackup.InvalidBackup)?.message ?: "Couldn't read the file"
+                Toast.makeText(this@HomeActivity, message, Toast.LENGTH_LONG).show()
+            }
+        }
+    }
+
+    private fun restoreAndRestart(values: Map<String, Any>) {
+        pendingRestore = null
+        if (!(application as CascadeApp).prefs.restoreBackup(values)) {
+            Toast.makeText(this, "Couldn't save the restored settings", Toast.LENGTH_LONG).show()
+            return
+        }
+        // Prefs loaded everything into memory at startup; a fresh process reads the new values.
+        startActivity(
+            Intent(this, HomeActivity::class.java)
+                .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK),
+        )
+        Runtime.getRuntime().exit(0)
+    }
 
     private val pickWidget = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
         val pending = pendingWidgetId
@@ -338,6 +396,10 @@ class HomeActivity : ComponentActivity() {
                             onSwipeDown = prefs::setSwipeDown,
                             swipeUp = swipeUp,
                             onSwipeUp = prefs::setSwipeUp,
+                            onExportSettings = { exportSettings.launch("cascade-settings-${java.time.LocalDate.now()}.json") },
+                            onImportSettings = {
+                                importSettings.launch(arrayOf("application/json", "text/*", "application/octet-stream"))
+                            },
                             nightTheme = nightTheme,
                             onNightTheme = prefs::setNightTheme,
                             onUnhide = prefs::unhide,
@@ -475,6 +537,25 @@ class HomeActivity : ComponentActivity() {
                             renamingFolder = null
                         },
                         onDismiss = { renamingFolder = null },
+                    )
+                }
+
+                pendingRestore?.let { values ->
+                    AlertDialog(
+                        onDismissRequest = { pendingRestore = null },
+                        title = { Text("Replace your settings?") },
+                        text = {
+                            Text(
+                                "Favourites, folders, hidden apps, themes and the rest are replaced " +
+                                    "with the backup's. Widgets stay as they are. Cascade restarts.",
+                            )
+                        },
+                        confirmButton = {
+                            TextButton(onClick = { restoreAndRestart(values) }) { Text("Replace") }
+                        },
+                        dismissButton = {
+                            TextButton(onClick = { pendingRestore = null }) { Text("Cancel") }
+                        },
                     )
                 }
 
@@ -705,6 +786,19 @@ class HomeActivity : ComponentActivity() {
 
     companion object {
         private const val WIDGET_HOST_ID = 1024
+        private const val MAX_BACKUP_BYTES = 1 shl 20
         private const val STATE_PENDING_WIDGET = "pending_widget_id"
     }
+}
+
+/** Reads up to [limit] bytes; InputStream.readNBytes needs API 33. */
+private fun java.io.InputStream.readNBytesCompat(limit: Int): ByteArray {
+    val out = java.io.ByteArrayOutputStream()
+    val buffer = ByteArray(8192)
+    while (out.size() < limit) {
+        val n = read(buffer, 0, minOf(buffer.size, limit - out.size()))
+        if (n < 0) break
+        out.write(buffer, 0, n)
+    }
+    return out.toByteArray()
 }

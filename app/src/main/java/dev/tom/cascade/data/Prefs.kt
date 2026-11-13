@@ -291,6 +291,30 @@ class Prefs(context: Context) {
         prefs.edit().putString(KEY_USAGE, UsageCodec.encode(next, now)).apply()
     }
 
+    /** Every portable setting as backup JSON; see [SettingsBackup]. */
+    fun exportBackup(): String = SettingsBackup.encode(prefs.all)
+
+    /**
+     * Replaces every portable setting with [values], keeping this phone's widgets. Written
+     * synchronously; the in-memory flows still hold the old values, so the caller restarts.
+     */
+    fun restoreBackup(values: Map<String, Any>): Boolean {
+        val editor = prefs.edit()
+        prefs.all.keys.filterNot { it in SettingsBackup.excluded }.forEach(editor::remove)
+        values.forEach { (key, value) ->
+            @Suppress("UNCHECKED_CAST")
+            when (value) {
+                is String -> editor.putString(key, value)
+                is Boolean -> editor.putBoolean(key, value)
+                is Int -> editor.putInt(key, value)
+                is Long -> editor.putLong(key, value)
+                is Float -> editor.putFloat(key, value)
+                is Set<*> -> editor.putStringSet(key, value as Set<String>)
+            }
+        }
+        return editor.commit()
+    }
+
     private val _swipeDown = MutableStateFlow(readSwipe(KEY_SWIPE_DOWN, SwipeAction.NOTIFICATIONS))
     val swipeDown: StateFlow<SwipeAction> = _swipeDown.asStateFlow()
     private val _swipeUp = MutableStateFlow(readSwipe(KEY_SWIPE_UP, SwipeAction.SEARCH))
