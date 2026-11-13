@@ -7,8 +7,26 @@ import android.service.notification.StatusBarNotification
 class CascadeNotificationListener : NotificationListenerService() {
     override fun onListenerConnected() {
         super.onListenerConnected()
-        NotificationStore.replaceAll(activeNotifications.orEmpty().mapNotNull(::toItem))
-        NotificationStore.dismisser = { key -> cancelNotification(key) }
+        // The system can drop our listener token between connecting and this call (e.g. the
+        // process restarting quickly), and then rejects it with a SecurityException.
+        val active = try {
+            activeNotifications.orEmpty()
+        } catch (e: SecurityException) {
+            return
+        }
+        NotificationStore.replaceAll(active.mapNotNull(::toItem))
+        NotificationStore.dismisser = { key ->
+            try {
+                cancelNotification(key)
+            } catch (e: SecurityException) {
+                // Listener was unbound mid-dismiss; the notification stays until we reconnect.
+            }
+        }
+    }
+
+    override fun onListenerDisconnected() {
+        NotificationStore.dismisser = null
+        super.onListenerDisconnected()
     }
 
     override fun onNotificationPosted(sbn: StatusBarNotification) {
