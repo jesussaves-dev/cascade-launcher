@@ -47,7 +47,7 @@ fun FolderRow(
         FolderPreview(apps = apps.take(4), iconFor = iconFor)
         Spacer(Modifier.width(LocalHomeStyle.current.iconGap))
         Text(
-            text = folder.name,
+            text = LocalHomeStyle.current.label(folder.name),
             style = LocalHomeStyle.current.appLabel,
             color = MaterialTheme.colorScheme.onBackground,
             maxLines = 1,

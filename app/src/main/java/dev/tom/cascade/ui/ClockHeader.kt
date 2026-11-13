@@ -100,7 +100,7 @@ fun ClockHeader(
                 formatClockTime(local.hour, local.minute, DateFormat.is24HourFormat(context))
             },
             style = if (compact) style.clockCompact else style.clock,
-            color = MaterialTheme.colorScheme.onBackground,
+            color = if (style.clockInAccent) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onBackground,
             modifier = Modifier.offset(x = style.clockNudge),
         )
         if (!compact) {

@@ -624,6 +624,11 @@ private val HomeTheme.title: String
         HomeTheme.TIDE -> "Tide"
         HomeTheme.NIGHT_WATCH -> "Night watch"
         HomeTheme.PAPER -> "Paper"
+        HomeTheme.OUTRUN -> "Outrun"
+        HomeTheme.PHOSPHOR -> "Phosphor"
+        HomeTheme.POSTER -> "Poster"
+        HomeTheme.BLUEPRINT -> "Blueprint"
+        HomeTheme.RISO -> "Riso"
     }
 
 private val HomeTheme.blurb: String
@@ -635,6 +640,11 @@ private val HomeTheme.blurb: String
         HomeTheme.TIDE -> "The time in words over deep water"
         HomeTheme.NIGHT_WATCH -> "Black and dim red for bedside use"
         HomeTheme.PAPER -> "Black on white, for e-ink and bright sun"
+        HomeTheme.OUTRUN -> "A neon clock over a sunset horizon grid"
+        HomeTheme.PHOSPHOR -> "A green CRT: glowing type and scanlines"
+        HomeTheme.POSTER -> "Black capitals on safety yellow"
+        HomeTheme.BLUEPRINT -> "A drafting sheet: monospace on a grid"
+        HomeTheme.RISO -> "Two-ink print, pink slipped over blue"
     }
 
 @Composable

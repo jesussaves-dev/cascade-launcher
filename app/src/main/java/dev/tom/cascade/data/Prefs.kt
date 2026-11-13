@@ -14,7 +14,7 @@ import java.util.UUID
 enum class ThemeMode { SYSTEM, LIGHT, DARK }
 
 /** The home screen's look. Original is Cascade 1.0; Index is the book-index redesign. */
-enum class HomeTheme { ORIGINAL, INDEX, RUBRIC, PIXEL, TIDE, NIGHT_WATCH, PAPER }
+enum class HomeTheme { ORIGINAL, INDEX, RUBRIC, PIXEL, TIDE, NIGHT_WATCH, PAPER, OUTRUN, PHOSPHOR, POSTER, BLUEPRINT, RISO }
 
 class Prefs(context: Context) {
     private val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)

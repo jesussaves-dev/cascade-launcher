@@ -14,6 +14,7 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.SideEffect
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.platform.LocalView
 import androidx.core.view.WindowCompat
 import dev.tom.cascade.data.HomeTheme
@@ -49,11 +50,15 @@ private val IndexAccentsOnLight: List<Color> = listOf(
     Color(0xFFA23468),
 )
 
-/** One light or dark colouring of a theme. A single accent means the theme fixes it. */
+/**
+ * One light or dark colouring of a theme. A single accent means the theme fixes it.
+ * [iconFilter] replaces the style's, for palettes where its icons would vanish.
+ */
 private class Palette(
     val scheme: ColorScheme,
     val accents: List<Color>,
     val ground: Brush? = null,
+    val iconFilter: ColorFilter? = null,
 )
 
 private fun palette(
@@ -67,6 +72,7 @@ private fun palette(
     outlineVariant: Long,
     accents: List<Color>,
     ground: Brush? = null,
+    iconFilter: ColorFilter? = null,
 ): Palette {
     val base = if (dark) darkColorScheme() else lightColorScheme()
     return Palette(
@@ -82,6 +88,7 @@ private fun palette(
         ),
         accents = accents,
         ground = ground,
+        iconFilter = iconFilter,
     )
 }
 
@@ -140,6 +147,55 @@ private val PaperInk = palette(
     muted = 0xFF000000, outline = 0xFF000000, outlineVariant = 0xFF000000, accents = listOf(Color(0xFF000000)),
 )
 
+// Outrun: indigo sky running down into a magenta horizon. The outline is the cyan grid.
+private val OutrunNight = palette(
+    dark = true, background = 0xFF0D0221, text = 0xFFF6E9FF, surface = 0xFF1A0838, fill = 0x26F6E9FF,
+    muted = 0xFFC3A6E6, outline = 0xFF2DE2E6, outlineVariant = 0xFF3A1D66, accents = listOf(Color(0xFFFF3EA5)),
+    ground = Brush.verticalGradient(
+        0f to Color(0xFF0D0221),
+        0.55f to Color(0xFF241047),
+        0.8f to Color(0xFF5B1150),
+        1f to Color(0xFF8C1E4F),
+    ),
+)
+
+// Phosphor: the tube is never quite black.
+private val PhosphorTube = palette(
+    dark = true, background = 0xFF030A05, text = 0xFF8CFFA0, surface = 0xFF07140A, fill = 0xFF0C2212,
+    muted = 0xFF4FBF68, outline = 0xFF3FA857, outlineVariant = 0xFF12301A, accents = listOf(Color(0xFFD4FFDC)),
+)
+
+// Poster: safety yellow by day, yellow on black by night, red for the shouting.
+private val PosterYellow = palette(
+    dark = false, background = 0xFFFFE600, text = 0xFF000000, surface = 0xFFFFEE4D, fill = 0xFFF2D900,
+    muted = 0xFF2B2600, outline = 0xFF000000, outlineVariant = 0xFF000000, accents = listOf(Color(0xFFD7001F)),
+    // Inverted: white glyphs print black on the yellow.
+    iconFilter = duotone(Color(0xFFFFE600), Color(0xFF000000)),
+)
+private val PosterBlack = palette(
+    dark = true, background = 0xFF000000, text = 0xFFFFE600, surface = 0xFF0D0D0D, fill = 0xFF1A1A1A,
+    muted = 0xFFD9C400, outline = 0xFFFFE600, outlineVariant = 0xFFFFE600, accents = listOf(Color(0xFFFF4D5E)),
+)
+
+// Blueprint: cyanotype by night, the drafting table's white sheet by day. outlineVariant draws the grid.
+private val BlueprintSheet = palette(
+    dark = true, background = 0xFF0E3A7A, text = 0xFFEAF2FF, surface = 0xFF124489, fill = 0xFF184E98,
+    muted = 0xFFA9C2E8, outline = 0xFFB9CFF0, outlineVariant = 0xFF3D68AD, accents = listOf(Color(0xFFFFE08A)),
+    ground = Brush.radialGradient(listOf(Color(0xFF15498F), Color(0xFF0E3A7A), Color(0xFF0A2C5E)), radius = 2400f),
+)
+private val BlueprintVellum = palette(
+    dark = false, background = 0xFFF4F7FB, text = 0xFF0B2E6B, surface = 0xFFFFFFFF, fill = 0xFFE3EBF6,
+    muted = 0xFF3F5D8F, outline = 0xFF0B2E6B, outlineVariant = 0xFFC3D3EC, accents = listOf(Color(0xFFC2361F)),
+    // Inverted: white glyphs are drawn in the drafting ink.
+    iconFilter = duotone(Color(0xFFF4F7FB), Color(0xFF0B2E6B)),
+)
+
+// Riso: newsprint, blue ink for words, fluorescent pink for everything loud.
+private val RisoPrint = palette(
+    dark = false, background = 0xFFF5EFE3, text = 0xFF3255A4, surface = 0xFFFAF6EE, fill = 0xFFEDE4D3,
+    muted = 0xFF5B6BA8, outline = 0xFFFF48B0, outlineVariant = 0xFFFF48B0, accents = listOf(Color(0xFFFF48B0)),
+)
+
 /** Dark and light palettes; null when the theme has only the other one. */
 private fun HomeTheme.palettes(): Pair<Palette?, Palette?> = when (this) {
     HomeTheme.ORIGINAL -> OriginalDark to OriginalLight
@@ -149,6 +205,11 @@ private fun HomeTheme.palettes(): Pair<Palette?, Palette?> = when (this) {
     HomeTheme.TIDE -> TideDeep to TideShallow
     HomeTheme.NIGHT_WATCH -> NightWatch to null
     HomeTheme.PAPER -> null to PaperInk
+    HomeTheme.OUTRUN -> OutrunNight to null
+    HomeTheme.PHOSPHOR -> PhosphorTube to null
+    HomeTheme.POSTER -> PosterBlack to PosterYellow
+    HomeTheme.BLUEPRINT -> BlueprintSheet to BlueprintVellum
+    HomeTheme.RISO -> null to RisoPrint
 }
 
 /** The accent swatches to offer in Settings, or null when the theme fixes its accent. */
@@ -191,7 +252,8 @@ fun CascadeTheme(
         onPrimary = onAccent,
         onSecondary = onAccent,
     )
-    val style = homeTheme.style().copy(ground = palette.ground)
+    val base = homeTheme.style()
+    val style = base.copy(ground = palette.ground, iconFilter = palette.iconFilter ?: base.iconFilter)
     // Edge-to-edge: system bar icons must contrast with our background even
     // when the app theme is forced opposite to the system theme.
     val view = LocalView.current

@@ -48,7 +48,7 @@ fun AppRow(
         AppIcon(icon = icon, label = app.label, sizeDp = iconSizeDp)
         Spacer(Modifier.width(LocalHomeStyle.current.iconGap))
         Text(
-            text = app.label,
+            text = LocalHomeStyle.current.label(app.label),
             style = LocalHomeStyle.current.appLabel,
             color = MaterialTheme.colorScheme.onBackground,
             maxLines = 1,

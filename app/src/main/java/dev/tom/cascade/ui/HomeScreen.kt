@@ -14,6 +14,7 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import dev.tom.cascade.ui.theme.LocalHomeStyle
+import dev.tom.cascade.ui.theme.groundPattern
 import dev.tom.cascade.ui.theme.SearchShape
 import dev.tom.cascade.ui.theme.SectionMark
 import androidx.compose.foundation.border
@@ -131,6 +132,7 @@ fun HomeScreen(
                     Modifier.background(MaterialTheme.colorScheme.background.copy(alpha = style.scrim))
                 },
             )
+            .groundPattern(style.pattern)
             .windowInsetsPadding(WindowInsets.safeDrawing),
     ) {
         // An unfolded Fold (or a phone on its side) gets two pages: clock left, apps right.

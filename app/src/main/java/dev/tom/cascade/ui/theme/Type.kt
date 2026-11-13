@@ -3,9 +3,12 @@ package dev.tom.cascade.ui.theme
 import androidx.compose.material3.Typography
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.staticCompositionLocalOf
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.ColorMatrix
+import androidx.compose.ui.graphics.Shadow
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
@@ -53,6 +56,19 @@ private val BarlowCondensed = FontFamily(
     Font(R.font.barlow_condensed_medium, FontWeight.Medium),
 )
 
+private val Audiowide = FontFamily(Font(R.font.audiowide_regular, FontWeight.Normal))
+
+private val Vt323 = FontFamily(Font(R.font.vt323_regular, FontWeight.Normal))
+
+private val ArchivoBlack = FontFamily(Font(R.font.archivo_black, FontWeight.Black))
+
+private val SpaceMono = FontFamily(
+    Font(R.font.spacemono_regular, FontWeight.Normal),
+    Font(R.font.spacemono_bold, FontWeight.Bold),
+)
+
+private val RubikMonoOne = FontFamily(Font(R.font.rubik_mono_one, FontWeight.Normal))
+
 private val Atkinson = FontFamily(
     Font(R.font.atkinson_regular, FontWeight.Normal),
     Font(R.font.atkinson_bold, FontWeight.Bold),
@@ -63,12 +79,16 @@ enum class SearchShape { Pill, Underline, Box }
 /** How a section's letter is set: 1.0 label, large initial, `> A` prompt, or ruled. */
 enum class SectionMark { Label, Initial, Prompt, Ruled }
 
+/** Drawn over the home ground, under everything else. */
+enum class GroundPattern { None, Scanlines, Grid, Halftone, Horizon }
+
 /** Everything about the home screen's type and furniture that a theme changes. */
 @Immutable
 data class HomeStyle(
     val clock: TextStyle,
     val clockCompact: TextStyle,
     val clockInWords: Boolean = false,
+    val clockInAccent: Boolean = false,
     /** Pulls thin numerals onto the text column's left edge. */
     val clockNudge: Dp = 0.dp,
     val date: TextStyle,
@@ -78,6 +98,7 @@ data class HomeStyle(
     val verseAsEpigraph: Boolean = true,
     val referenceInAccent: Boolean = false,
     val appLabel: TextStyle,
+    val labelsUpper: Boolean = false,
     val rowPadding: Dp = 9.dp,
     val iconGap: Dp = 18.dp,
     val initial: TextStyle,
@@ -94,7 +115,10 @@ data class HomeStyle(
     /** Paints the home ground instead of the flat background colour. */
     val ground: Brush? = null,
     val iconFilter: ColorFilter? = null,
-)
+    val pattern: GroundPattern = GroundPattern.None,
+) {
+    fun label(text: String): String = if (labelsUpper) text.uppercase() else text
+}
 
 private val m3 = Typography()
 
@@ -275,6 +299,180 @@ private val PaperStyle = HomeStyle(
     iconFilter = ColorFilter.colorMatrix(ColorMatrix().apply { setToSaturation(0f) }),
 )
 
+/**
+ * Maps an icon's brightness onto a two-ink ramp: black becomes [dark], white becomes [light].
+ * Compose's matrix offsets are on the 0..255 scale.
+ */
+internal fun duotone(dark: Color, light: Color): ColorFilter {
+    fun row(d: Float, l: Float): FloatArray {
+        val span = l - d
+        return floatArrayOf(0.299f * span, 0.587f * span, 0.114f * span, 0f, d * 255f)
+    }
+    return ColorFilter.colorMatrix(
+        ColorMatrix(
+            row(dark.red, light.red) +
+                row(dark.green, light.green) +
+                row(dark.blue, light.blue) +
+                floatArrayOf(0f, 0f, 0f, 1f, 0f),
+        ),
+    )
+}
+
+// Outrun: chrome-era sunset. The clock and initials burn hot pink.
+private val NeonPink = Color(0xFFFF3EA5)
+private val PinkGlow = Shadow(NeonPink.copy(alpha = 0.85f), Offset.Zero, blurRadius = 28f)
+
+private val OutrunClock = TextStyle(
+    fontFamily = Audiowide,
+    fontSize = 88.sp,
+    lineHeight = 96.sp,
+    letterSpacing = 0.02.em,
+    fontFeatureSettings = "tnum",
+    shadow = PinkGlow,
+)
+
+private val OutrunStyle = HomeStyle(
+    clock = OutrunClock,
+    clockCompact = OutrunClock.copy(fontSize = 42.sp, lineHeight = 48.sp, shadow = PinkGlow.copy(blurRadius = 16f)),
+    clockInAccent = true,
+    date = TextStyle(fontFamily = Audiowide, fontSize = 14.sp, lineHeight = 22.sp, letterSpacing = 0.04.em),
+    verse = TextStyle(fontFamily = Outfit, fontWeight = FontWeight.Light, fontSize = 15.sp, lineHeight = 23.sp),
+    verseReference = TextStyle(fontFamily = Audiowide, fontSize = 12.sp, lineHeight = 18.sp, letterSpacing = 0.1.em),
+    referenceInAccent = true,
+    appLabel = TextStyle(fontFamily = Outfit, fontWeight = FontWeight.Light, fontSize = 20.sp, lineHeight = 26.sp),
+    initial = TextStyle(fontFamily = Audiowide, fontSize = 24.sp, lineHeight = 28.sp, shadow = PinkGlow.copy(blurRadius = 18f)),
+    search = TextStyle(fontFamily = Audiowide, fontSize = 15.sp, lineHeight = 22.sp, letterSpacing = 0.08.em),
+    searchShape = SearchShape.Underline,
+    rail = TextStyle(fontFamily = Audiowide),
+    railMaxSize = 10.sp,
+    scrim = 0.88f,
+    pattern = GroundPattern.Horizon,
+)
+
+// Phosphor: P1 green on a dead-black tube. Everything glows a little.
+private val PhosphorGreen = Color(0xFF8CFFA0)
+private val GreenGlow = Shadow(Color(0xFF33FF66).copy(alpha = 0.7f), Offset.Zero, blurRadius = 14f)
+
+private val PhosphorClock = TextStyle(
+    fontFamily = Vt323,
+    fontSize = 132.sp,
+    lineHeight = 116.sp,
+    shadow = GreenGlow.copy(blurRadius = 32f),
+)
+
+private val PhosphorStyle = HomeStyle(
+    clock = PhosphorClock,
+    clockCompact = PhosphorClock.copy(fontSize = 60.sp, lineHeight = 56.sp, shadow = GreenGlow),
+    clockNudge = (-2).dp,
+    date = TextStyle(fontFamily = Vt323, fontSize = 22.sp, lineHeight = 24.sp, shadow = GreenGlow),
+    verse = TextStyle(fontFamily = Vt323, fontSize = 20.sp, lineHeight = 22.sp, shadow = GreenGlow),
+    verseReference = TextStyle(fontFamily = Vt323, fontSize = 18.sp, lineHeight = 20.sp, shadow = GreenGlow),
+    appLabel = TextStyle(fontFamily = Vt323, fontSize = 25.sp, lineHeight = 28.sp, shadow = GreenGlow),
+    rowPadding = 8.dp,
+    initial = TextStyle(fontFamily = Vt323, fontSize = 24.sp, lineHeight = 26.sp, shadow = GreenGlow),
+    section = SectionMark.Prompt,
+    search = TextStyle(fontFamily = Vt323, fontSize = 22.sp, lineHeight = 24.sp, shadow = GreenGlow),
+    searchShape = SearchShape.Box,
+    rail = TextStyle(fontFamily = Vt323),
+    railMaxSize = 14.sp,
+    scrim = 1f,
+    iconFilter = duotone(Color(0xFF020803), PhosphorGreen),
+    pattern = GroundPattern.Scanlines,
+)
+
+// Poster: brutalist street bill. Heavy capitals, hard rules, nothing soft.
+private val PosterClock = TextStyle(
+    fontFamily = ArchivoBlack,
+    fontWeight = FontWeight.Black,
+    fontSize = 96.sp,
+    lineHeight = 92.sp,
+    letterSpacing = (-0.05).em,
+    fontFeatureSettings = "tnum",
+)
+
+private val PosterStyle = HomeStyle(
+    clock = PosterClock,
+    clockCompact = PosterClock.copy(fontSize = 46.sp, lineHeight = 46.sp),
+    clockNudge = (-5).dp,
+    date = TextStyle(fontFamily = ArchivoBlack, fontWeight = FontWeight.Black, fontSize = 14.sp, lineHeight = 20.sp),
+    verse = TextStyle(fontFamily = Atkinson, fontWeight = FontWeight.Bold, fontSize = 15.sp, lineHeight = 21.sp),
+    verseReference = TextStyle(fontFamily = ArchivoBlack, fontWeight = FontWeight.Black, fontSize = 13.sp, lineHeight = 18.sp),
+    referenceInAccent = true,
+    appLabel = TextStyle(fontFamily = ArchivoBlack, fontWeight = FontWeight.Black, fontSize = 18.sp, lineHeight = 22.sp, letterSpacing = (-0.01).em),
+    labelsUpper = true,
+    rowPadding = 10.dp,
+    iconGap = 16.dp,
+    initial = TextStyle(fontFamily = ArchivoBlack, fontWeight = FontWeight.Black, fontSize = 40.sp, lineHeight = 40.sp, letterSpacing = (-0.04).em),
+    section = SectionMark.Ruled,
+    search = TextStyle(fontFamily = ArchivoBlack, fontWeight = FontWeight.Black, fontSize = 15.sp, lineHeight = 20.sp),
+    searchShape = SearchShape.Box,
+    rail = TextStyle(fontFamily = ArchivoBlack, fontWeight = FontWeight.Black),
+    railMaxSize = 12.sp,
+    scrim = 1f,
+)
+
+// Blueprint: a drafting sheet. Monospace annotations on a ruled grid.
+private val BlueprintClock = TextStyle(
+    fontFamily = SpaceMono,
+    fontWeight = FontWeight.Bold,
+    fontSize = 80.sp,
+    lineHeight = 88.sp,
+    letterSpacing = (-0.04).em,
+)
+
+private val BlueprintStyle = HomeStyle(
+    clock = BlueprintClock,
+    clockCompact = BlueprintClock.copy(fontSize = 38.sp, lineHeight = 44.sp),
+    clockNudge = (-3).dp,
+    date = TextStyle(fontFamily = SpaceMono, fontSize = 14.sp, lineHeight = 20.sp, letterSpacing = 0.06.em),
+    verse = TextStyle(fontFamily = SpaceMono, fontSize = 13.sp, lineHeight = 20.sp),
+    verseReference = TextStyle(fontFamily = SpaceMono, fontWeight = FontWeight.Bold, fontSize = 12.sp, lineHeight = 18.sp),
+    referenceInAccent = true,
+    appLabel = TextStyle(fontFamily = SpaceMono, fontSize = 16.sp, lineHeight = 22.sp),
+    rowPadding = 10.dp,
+    initial = TextStyle(fontFamily = SpaceMono, fontWeight = FontWeight.Bold, fontSize = 18.sp, lineHeight = 22.sp),
+    section = SectionMark.Ruled,
+    search = TextStyle(fontFamily = SpaceMono, fontSize = 14.sp, lineHeight = 20.sp),
+    searchShape = SearchShape.Box,
+    rail = TextStyle(fontFamily = SpaceMono, fontWeight = FontWeight.Bold),
+    railMaxSize = 10.sp,
+    scrim = 0.94f,
+    pattern = GroundPattern.Grid,
+)
+
+// Riso: fluorescent pink printed over medium blue, a few points out of register.
+private val RisoBlue = Color(0xFF3255A4)
+private val Misregister = Shadow(RisoBlue.copy(alpha = 0.9f), Offset(7f, 5f), blurRadius = 0f)
+
+private val RisoClock = TextStyle(
+    fontFamily = RubikMonoOne,
+    fontSize = 78.sp,
+    lineHeight = 88.sp,
+    letterSpacing = (-0.04).em,
+    shadow = Misregister,
+)
+
+private val RisoStyle = HomeStyle(
+    clock = RisoClock,
+    clockCompact = RisoClock.copy(fontSize = 36.sp, lineHeight = 42.sp, shadow = Misregister.copy(offset = Offset(4f, 3f))),
+    clockInAccent = true,
+    clockNudge = (-2).dp,
+    date = TextStyle(fontFamily = SpaceMono, fontWeight = FontWeight.Bold, fontSize = 14.sp, lineHeight = 20.sp),
+    verse = TextStyle(fontFamily = SpaceMono, fontSize = 13.sp, lineHeight = 20.sp),
+    verseReference = TextStyle(fontFamily = RubikMonoOne, fontSize = 11.sp, lineHeight = 18.sp),
+    referenceInAccent = true,
+    appLabel = TextStyle(fontFamily = Outfit, fontWeight = FontWeight.Normal, fontSize = 20.sp, lineHeight = 26.sp),
+    initial = TextStyle(fontFamily = RubikMonoOne, fontSize = 30.sp, lineHeight = 34.sp, shadow = Misregister.copy(offset = Offset(5f, 4f))),
+    search = TextStyle(fontFamily = SpaceMono, fontSize = 14.sp, lineHeight = 20.sp),
+    searchShape = SearchShape.Box,
+    rail = TextStyle(fontFamily = RubikMonoOne),
+    railMaxSize = 9.sp,
+    scrim = 1f,
+    // Shadows print pink, light prints blue, so white-glyph icon packs stay visible on paper.
+    iconFilter = duotone(Color(0xFFFF48B0), RisoBlue),
+    pattern = GroundPattern.Halftone,
+)
+
 fun HomeTheme.style(): HomeStyle = when (this) {
     HomeTheme.ORIGINAL -> OriginalStyle
     HomeTheme.INDEX -> IndexStyle
@@ -283,6 +481,11 @@ fun HomeTheme.style(): HomeStyle = when (this) {
     HomeTheme.TIDE -> TideStyle
     HomeTheme.NIGHT_WATCH -> NightStyle
     HomeTheme.PAPER -> PaperStyle
+    HomeTheme.OUTRUN -> OutrunStyle
+    HomeTheme.PHOSPHOR -> PhosphorStyle
+    HomeTheme.POSTER -> PosterStyle
+    HomeTheme.BLUEPRINT -> BlueprintStyle
+    HomeTheme.RISO -> RisoStyle
 }
 
 val LocalHomeStyle = staticCompositionLocalOf { IndexStyle }

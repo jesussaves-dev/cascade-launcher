@@ -12,7 +12,7 @@ One column of apps, a clock, and nothing that wants your attention.
 [![Kotlin · Compose](https://img.shields.io/badge/kotlin-compose-62C3DB?style=flat-square&logo=kotlin&logoColor=white&labelColor=0F1B22)](https://kotlinlang.org)
 [![MIT](https://img.shields.io/badge/licence-MIT-62C3DB?style=flat-square&labelColor=0F1B22)](LICENSE)
 
-[**Download the APK**](https://github.com/jesussaves-dev/cascade-launcher/releases/latest) · [Themes](#seven-themes) · [Foldables](#foldables) · [Features](#features) · [Privacy](#privacy) · [Build](#build)
+[**Download the APK**](https://github.com/jesussaves-dev/cascade-launcher/releases/latest) · [Themes](#twelve-themes) · [Foldables](#foldables) · [Features](#features) · [Privacy](#privacy) · [Build](#build)
 
 </div>
 
@@ -20,7 +20,7 @@ One column of apps, a clock, and nothing that wants your attention.
 
 > No ads. No account. No analytics. The only network request it can make is an optional weather lookup.
 
-## Seven themes
+## Twelve themes
 
 Each theme changes the type, colours, clock, search field, section headers and alphabet rail. You choose one in **Settings → Appearance → Theme**.
 
@@ -35,11 +35,17 @@ Each theme changes the type, colours, clock, search field, section headers and a
     <td align="center"><img src="screenshots/themes/tide.png" width="200" alt="Tide theme"><br><b>Tide</b><br><sub>The time in words, over deep water.</sub></td>
     <td align="center"><img src="screenshots/themes/night-watch.png" width="200" alt="Night watch theme"><br><b>Night watch</b><br><sub>OLED black and dim red, icons included. Dark only.</sub></td>
     <td align="center"><img src="screenshots/themes/paper.png" width="200" alt="Paper theme"><br><b>Paper</b><br><sub>Black on white for e-ink and bright sun. Light only.</sub></td>
-    <td></td>
+    <td align="center"><img src="screenshots/themes/outrun.png" width="200" alt="Outrun theme"><br><b>Outrun</b><br><sub>A neon clock over a sunset and a horizon grid. Dark only.</sub></td>
+  </tr>
+  <tr>
+    <td align="center"><img src="screenshots/themes/phosphor.png" width="200" alt="Phosphor theme"><br><b>Phosphor</b><br><sub>A green CRT. Glowing type, scanlines, green icons. Dark only.</sub></td>
+    <td align="center"><img src="screenshots/themes/poster.png" width="200" alt="Poster theme"><br><b>Poster</b><br><sub>Brutalist capitals on safety yellow, or yellow on black.</sub></td>
+    <td align="center"><img src="screenshots/themes/blueprint.png" width="200" alt="Blueprint theme"><br><b>Blueprint</b><br><sub>Monospace on a drafting grid. Cyanotype or white sheet.</sub></td>
+    <td align="center"><img src="screenshots/themes/riso.png" width="200" alt="Riso theme"><br><b>Riso</b><br><sub>Two-ink print: pink slipped out of register over blue. Light only.</sub></td>
   </tr>
 </table>
 
-Original and Index let you pick one of six accent colours. The other themes set their own. Every theme except Night watch and Paper has a light and a dark palette.
+Original and Index let you pick one of six accent colours. The other themes set their own. Outrun, Phosphor and Night watch are dark only; Paper and Riso are light only. The rest have both.
 
 **At night** switches to a second theme of your choice from sunset to sunrise in your weather city, or from 9 pm to 7 am without one. The sun's position is worked out on the phone.
 
@@ -108,7 +114,7 @@ app/src/main/java/dev/tom/cascade/
 ├── model/          app, folder, contact, weather and verse models
 ├── notifications/  notification listener, store and flags
 ├── ui/             Compose screens, dialogs and gestures
-│   └── theme/      the seven themes: palettes, fonts and HomeStyle
+│   └── theme/      the twelve themes: palettes, fonts, ground patterns and HomeStyle
 └── util/           pure sorting, search, clock and formatting helpers
 ```
 
