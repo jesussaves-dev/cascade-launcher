@@ -72,31 +72,65 @@ fun folderApps(
     return folder.appKeys.mapNotNull(byKey::get).filterNot { it.key in hidden }
 }
 
+/**
+ * Apps matching [query], best first. Matches are tiered (name or word start, then initials,
+ * then anywhere in the name, then one typo at a word start); within a tier the apps used most
+ * lately come first, then A–Z. An empty query lists every app, most used first.
+ */
 fun searchApps(
     apps: List<AppEntry>,
     query: String,
     hidden: Set<String>,
     collator: Collator = Collator.getInstance(),
+    usage: Map<String, Usage> = emptyMap(),
+    now: Long = 0L,
 ): List<AppEntry> {
-    val q = normalize(query)
+    val q = normalize(query).trim()
     val visible = apps.filterNot { it.key in hidden }
-    if (q.isEmpty()) return sortApps(visible, collator)
+    val byUse = compareByDescending<AppEntry> { usage[it.key]?.at(now) ?: 0.0 }
+        .thenComparator { a, b -> collator.compare(a.label, b.label) }
+    if (q.isEmpty()) return visible.sortedWith(byUse)
     return visible
-        .mapNotNull { app ->
-            val label = normalize(app.label)
-            val rank = when {
-                label.startsWith(q) -> 0
-                label.split(' ', '-', '.', '_').any { it.startsWith(q) } -> 0
-                label.contains(q) -> 1
-                else -> null
-            }
-            rank?.let { it to app }
-        }
-        .sortedWith(
-            compareBy<Pair<Int, AppEntry>> { it.first }
-                .thenComparator { a, b -> collator.compare(a.second.label, b.second.label) }
-        )
+        .mapNotNull { app -> matchTier(normalize(app.label), q)?.let { it to app } }
+        .sortedWith(compareBy<Pair<Int, AppEntry>> { it.first }.thenBy(byUse) { it.second })
         .map { it.second }
+}
+
+/** 0 name or word start, 1 initials, 2 anywhere, 3 one typo at a word start (4+ letters); null for no match. */
+internal fun matchTier(label: String, q: String): Int? {
+    val words = label.split(' ', '-', '.', '_').filter { it.isNotEmpty() }
+    return when {
+        label.startsWith(q) || words.any { it.startsWith(q) } -> 0
+        q.length >= 2 && words.size >= q.length && initials(words).startsWith(q) -> 1
+        label.contains(q) -> 2
+        q.length >= 4 && words.any { nearPrefix(it, q) } -> 3
+        else -> null
+    }
+}
+
+private fun initials(words: List<String>): String = buildString { words.forEach { append(it[0]) } }
+
+/** Whether some prefix of [word] is within one edit (or one swap of neighbours) of [q]. */
+private fun nearPrefix(word: String, q: String): Boolean {
+    for (len in (q.length - 1)..(q.length + 1)) {
+        if (len < 1 || len > word.length) continue
+        if (withinOneEdit(word.substring(0, len), q)) return true
+    }
+    return false
+}
+
+private fun withinOneEdit(a: String, b: String): Boolean {
+    if (a == b) return true
+    if (a.length == b.length) {
+        val diffs = a.indices.filter { a[it] != b[it] }
+        return diffs.size == 1 ||
+            (diffs.size == 2 && diffs[1] == diffs[0] + 1 && a[diffs[0]] == b[diffs[1]] && a[diffs[1]] == b[diffs[0]])
+    }
+    val (short, long) = if (a.length < b.length) a to b else b to a
+    if (long.length - short.length != 1) return false
+    var i = 0
+    while (i < short.length && short[i] == long[i]) i++
+    return short.substring(i) == long.substring(i + 1)
 }
 
 private fun headerFor(label: String): String {

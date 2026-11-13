@@ -1,5 +1,7 @@
 package dev.tom.cascade.data
 
+import dev.tom.cascade.util.Usage
+import dev.tom.cascade.util.UsageCodec
 import android.content.Context
 import dev.tom.cascade.iconpack.IconOverrideCodec
 import dev.tom.cascade.model.Folder
@@ -275,6 +277,17 @@ class Prefs(context: Context) {
     private val _themedIcons = MutableStateFlow(prefs.getBoolean(KEY_THEMED_ICONS, false))
     val themedIcons: StateFlow<Boolean> = _themedIcons.asStateFlow()
 
+    private val _usage = MutableStateFlow(UsageCodec.decode(prefs.getString(KEY_USAGE, null)))
+    /** Per app key, how much it has been launched lately; ranks search results. */
+    val usage: StateFlow<Map<String, Usage>> = _usage.asStateFlow()
+
+    fun recordLaunch(appKey: String, now: Long = System.currentTimeMillis()) {
+        val current = _usage.value
+        val next = current + (appKey to (current[appKey]?.launched(now) ?: Usage(1.0, now)))
+        _usage.value = next
+        prefs.edit().putString(KEY_USAGE, UsageCodec.encode(next, now)).apply()
+    }
+
     private val _haptics = MutableStateFlow(prefs.getBoolean(KEY_HAPTICS, true))
     val haptics: StateFlow<Boolean> = _haptics.asStateFlow()
 
@@ -331,6 +344,7 @@ class Prefs(context: Context) {
         private const val KEY_SHOW_VERSE = "show_verse"
         private const val KEY_THEMED_ICONS = "themed_icons"
         private const val KEY_HAPTICS = "haptics"
+        private const val KEY_USAGE = "usage"
         private const val KEY_NIGHT_THEME = "night_theme"
     }
 }

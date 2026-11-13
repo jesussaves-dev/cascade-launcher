@@ -1,18 +1,21 @@
 package dev.tom.cascade.ui
 
 import androidx.activity.compose.BackHandler
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.windowInsetsPadding
-import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.safeDrawing
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.MaterialTheme
@@ -29,6 +32,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.ImageBitmap
@@ -38,12 +42,14 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import dev.tom.cascade.model.AppEntry
 import dev.tom.cascade.model.Contact
+import dev.tom.cascade.util.Usage
 import dev.tom.cascade.util.searchApps
 import dev.tom.cascade.util.searchContacts
 
 @Composable
 fun SearchOverlay(
     apps: List<AppEntry>,
+    usage: Map<String, Usage> = emptyMap(),
     contacts: List<Contact> = emptyList(),
     iconFor: (AppEntry) -> ImageBitmap?,
     iconSizeDp: Int,
@@ -53,7 +59,9 @@ fun SearchOverlay(
     onDismiss: () -> Unit,
 ) {
     var query by rememberSaveable { mutableStateOf("") }
-    val results = remember(apps, query) { searchApps(apps, query, emptySet()) }
+    // Fixed while the overlay is open, so results don't reshuffle as the clock ticks.
+    val now = remember { System.currentTimeMillis() }
+    val results = remember(apps, query, usage) { searchApps(apps, query, emptySet(), usage = usage, now = now) }
     val contactResults = remember(contacts, query) { searchContacts(contacts, query) }
     val focusRequester = remember { FocusRequester() }
 
@@ -97,7 +105,9 @@ fun SearchOverlay(
                 }
             } else {
                 LazyColumn(modifier = Modifier.fillMaxWidth().weight(1f)) {
-                    items(results, key = { it.key }) { app ->
+                    itemsIndexed(results, key = { _, app -> app.key }) { index, app ->
+                        // The top hit is what the keyboard's search key opens, so mark it.
+                        val topHit = index == 0 && query.isNotBlank()
                         AppRow(
                             app = app,
                             icon = remember(app.key, iconSizeDp) { iconFor(app) },
@@ -105,6 +115,14 @@ fun SearchOverlay(
                             hasNotification = false,
                             onClick = { onLaunch(app) },
                             onLongClick = null,
+                            modifier = if (topHit) {
+                                Modifier
+                                    .padding(horizontal = 8.dp)
+                                    .clip(RoundedCornerShape(12.dp))
+                                    .background(MaterialTheme.colorScheme.surfaceVariant)
+                            } else {
+                                Modifier
+                            },
                         )
                     }
                     if (contactResults.isNotEmpty()) {

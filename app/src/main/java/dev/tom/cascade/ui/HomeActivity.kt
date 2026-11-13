@@ -173,6 +173,7 @@ class HomeActivity : ComponentActivity() {
             val iconPx = (iconSizeDp * density).toInt()
             val themedIcons by prefs.themedIcons.collectAsStateWithLifecycle()
             val hapticsOn by prefs.haptics.collectAsStateWithLifecycle()
+            val usage by prefs.usage.collectAsStateWithLifecycle()
             // Plate and ink as ARGB, or null when icons keep their own colours.
             val iconForTint: (AppEntry, Pair<Int, Int>?) -> androidx.compose.ui.graphics.ImageBitmap? = { app, tint ->
                 val override = overrideDrawable(iconOverrides, app.key, activeIconPack)
@@ -366,6 +367,7 @@ class HomeActivity : ComponentActivity() {
                                 launchApp(it)
                             },
                             apps = visibleApps,
+                            usage = usage,
                             onDismiss = { searching = false },
                         )
                     }
@@ -639,6 +641,7 @@ class HomeActivity : ComponentActivity() {
         }
         try {
             startActivity(intent)
+            (application as CascadeApp).prefs.recordLaunch(app.key)
         } catch (_: ActivityNotFoundException) {
             (application as CascadeApp).apps.refresh()
             Toast.makeText(this, "${app.label} is not installed", Toast.LENGTH_SHORT).show()

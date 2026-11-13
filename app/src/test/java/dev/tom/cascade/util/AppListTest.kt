@@ -67,4 +67,37 @@ class AppListTest {
         val entries = listOf(app("Ёлка", "elka"), app("Ель", "el"), app("Яблоко", "yabloko"))
         assertEquals(listOf("Е", "Ё", "Я"), sections(entries, emptyList(), emptySet(), ru).map { it.header })
     }
+    @Test fun `initials find multi-word apps`() {
+        val entries = listOf(app("Google Maps", "gmaps"), app("Gmail", "gmail"), app("Maps", "maps"))
+        // "gm" is a prefix of Gmail (tier 0) and the initials of Google Maps (tier 1).
+        assertEquals(listOf("Gmail", "Google Maps"), searchApps(entries, "gm", emptySet(), collator).map { it.label })
+    }
+
+    @Test fun `one typo still finds an app once the query is long enough`() {
+        val entries = listOf(app("Spotify", "spotify"), app("Settings", "settings"))
+        assertEquals(listOf("Spotify"), searchApps(entries, "sptoi", emptySet(), collator).map { it.label })
+        assertEquals(listOf("Spotify"), searchApps(entries, "spotfy", emptySet(), collator).map { it.label })
+        // Three letters is too short to guess at.
+        assertEquals(emptyList<String>(), searchApps(entries, "spx", emptySet(), collator).map { it.label })
+    }
+
+    @Test fun `exact matches outrank typo matches regardless of use`() {
+        val entries = listOf(app("Clock", "clock"), app("Clack", "clack"))
+        val usage = mapOf("clack/.Main" to Usage(50.0, 0L))
+        assertEquals(listOf("Clock", "Clack"), searchApps(entries, "clock", emptySet(), collator, usage, 0L).map { it.label })
+    }
+
+    @Test fun `within a tier the most used app comes first`() {
+        val entries = listOf(app("Camera", "camera"), app("Calendar", "calendar"), app("Calculator", "calc"))
+        val usage = mapOf("calc/.Main" to Usage(3.0, 0L), "calendar/.Main" to Usage(1.0, 0L))
+        assertEquals(
+            listOf("Calculator", "Calendar", "Camera"),
+            searchApps(entries, "ca", emptySet(), collator, usage, 0L).map { it.label },
+        )
+        // An empty query puts used apps first, then the rest A–Z.
+        assertEquals(
+            listOf("Calculator", "Calendar", "Camera"),
+            searchApps(entries, "", emptySet(), collator, usage, 0L).map { it.label },
+        )
+    }
 }
