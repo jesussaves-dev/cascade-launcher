@@ -514,7 +514,7 @@ fun SettingsScreen(
 
             HorizontalDivider(Modifier.padding(vertical = 16.dp))
             SectionTitle("About")
-            Text("Cascade 1.2.0")
+            Text("Cascade 1.3.0")
             Text("MIT licence", color = MaterialTheme.colorScheme.onSurfaceVariant)
             Spacer(Modifier.height(32.dp))
         }

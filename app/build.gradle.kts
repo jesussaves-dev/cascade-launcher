@@ -14,8 +14,8 @@ android {
         applicationId = "dev.tom.cascade"
         minSdk = 26
         targetSdk = 36
-        versionCode = 120
-        versionName = "1.2.0"
+        versionCode = 130
+        versionName = "1.3.0"
     }
 
     compileOptions {
