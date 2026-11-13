@@ -47,6 +47,8 @@ Each theme changes the type, colours, clock, search field, section headers and a
 
 Original and Index let you pick one of six accent colours. The other themes set their own. Outrun, Phosphor and Night watch are dark only; Paper and Riso are light only. The rest have both.
 
+Outrun's grid rolls toward you, Phosphor's tube breathes under a rolling scan band, and Riso's dots drift. The motion runs at 30 fps only while the home screen is in front and the list is still. It stops when Android's **Remove animations** is on, and **Settings → Appearance → Animated backgrounds** turns it off.
+
 **At night** switches to a second theme of your choice from sunset to sunrise in your weather city, or from 9 pm to 7 am without one. The sun's position is worked out on the phone.
 
 ## Foldables

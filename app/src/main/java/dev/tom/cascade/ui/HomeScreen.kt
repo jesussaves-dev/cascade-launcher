@@ -19,6 +19,8 @@ import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalHapticFeedback
 import dev.tom.cascade.ui.theme.LocalHomeStyle
 import dev.tom.cascade.ui.theme.groundPattern
+import androidx.compose.ui.graphics.graphicsLayer
+import dev.tom.cascade.ui.theme.rememberGroundPhase
 import dev.tom.cascade.ui.theme.SearchShape
 import dev.tom.cascade.ui.theme.SectionMark
 import androidx.compose.foundation.border
@@ -118,6 +120,7 @@ fun HomeScreen(
     /** Null leaves that swipe alone. */
     onSwipeDown: (() -> Unit)? = null,
     onSwipeUp: (() -> Unit)? = null,
+    animateGround: Boolean = true,
     onClockLongPress: () -> Unit = {},
 ) {
     val scope = rememberCoroutineScope()
@@ -138,337 +141,346 @@ fun HomeScreen(
     }
     val style = LocalHomeStyle.current
     val ground = style.ground
-    BoxWithConstraints(
-        modifier = Modifier
-            .fillMaxSize()
-            .then(
-                if (ground != null) {
-                    Modifier.background(ground, alpha = style.scrim)
-                } else {
-                    Modifier.background(MaterialTheme.colorScheme.background.copy(alpha = style.scrim))
-                },
-            )
-            .groundPattern(style.pattern)
-            .nestedScroll(swipe)
-            .windowInsetsPadding(WindowInsets.safeDrawing),
-    ) {
-        // An unfolded Fold (or a phone on its side) gets two pages: clock left, apps right.
-        val twoPane = maxWidth >= TwoPaneMinWidth
-        val searchBar: @Composable () -> Unit = {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(start = 16.dp, end = 4.dp, top = 4.dp, bottom = 8.dp),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            val rule = MaterialTheme.colorScheme.outline
-            val field = when (style.searchShape) {
-                SearchShape.Pill -> Modifier
-                    .clip(CircleShape)
-                    .background(MaterialTheme.colorScheme.surfaceVariant)
-                    .clickable(onClick = onOpenSearch, onClickLabel = "Search apps")
-                    .padding(horizontal = 16.dp)
-                SearchShape.Box -> Modifier
-                    .border(2.dp, rule, RectangleShape)
-                    .clickable(onClick = onOpenSearch, onClickLabel = "Search apps")
-                    .padding(horizontal = 12.dp)
-                SearchShape.Underline -> Modifier
-                    .clickable(onClick = onOpenSearch, onClickLabel = "Search apps")
-                    .drawBehind {
-                        val y = size.height - 1.dp.toPx() / 2
-                        drawLine(rule, Offset(0f, y), Offset(size.width, y), strokeWidth = 1.dp.toPx())
-                    }
-                    .padding(horizontal = 4.dp)
-            }
-            Row(
-                modifier = Modifier
-                    .weight(1f)
-                    .heightIn(min = 48.dp)
-                    .then(field),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Search,
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.size(if (style.searchShape == SearchShape.Pill) 24.dp else 20.dp),
-                )
-                Spacer(Modifier.width(12.dp))
-                Text(
-                    text = "Search apps",
-                    style = style.search,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-            }
-            Spacer(Modifier.width(8.dp))
-            IconButton(onClick = onOpenSettings) {
-                Icon(
-                    if (style.searchShape == SearchShape.Pill && style.railStrip) {
-                        Icons.Filled.Settings
+    val phase = rememberGroundPhase(style.pattern, run = animateGround && !listState.isScrollInProgress)
+    Box(Modifier.fillMaxSize()) {
+        // The ground is its own layer, so an animated pattern redraws itself and nothing above it.
+        Spacer(
+            Modifier
+                .matchParentSize()
+                .graphicsLayer {}
+                .then(
+                    if (ground != null) {
+                        Modifier.background(ground, alpha = style.scrim)
                     } else {
-                        Icons.Outlined.Settings
+                        Modifier.background(MaterialTheme.colorScheme.background.copy(alpha = style.scrim))
                     },
-                    contentDescription = "Settings",
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
-            }
-        }
-
-        }
-        val banner: @Composable () -> Unit = {
-        if (showBanner) {
+                .groundPattern(style.pattern) { phase.floatValue },
+        )
+        BoxWithConstraints(
+            modifier = Modifier
+                .fillMaxSize()
+                .nestedScroll(swipe)
+                .windowInsetsPadding(WindowInsets.safeDrawing),
+        ) {
+            // An unfolded Fold (or a phone on its side) gets two pages: clock left, apps right.
+            val twoPane = maxWidth >= TwoPaneMinWidth
+            val searchBar: @Composable () -> Unit = {
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 4.dp)
-                    .clip(RoundedCornerShape(12.dp))
-                    .background(MaterialTheme.colorScheme.surfaceVariant)
-                    .padding(start = 16.dp),
+                    .padding(start = 16.dp, end = 4.dp, top = 4.dp, bottom = 8.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                Text(
-                    text = "Set Cascade as your default launcher",
-                    style = MaterialTheme.typography.bodyMedium,
-                    modifier = Modifier.weight(1f),
-                )
-                TextButton(onClick = onSetDefault) { Text("Set") }
-                TextButton(onClick = onDismissBanner) { Text("Dismiss") }
-            }
-        }
-
-        }
-        val header: @Composable () -> Unit = {
-        ClockHeader(
-            modifier = Modifier.homeSwipeArea(swipe),
-            weather = weather,
-            showWeather = showWeather,
-            showVerse = showVerse,
-            fahrenheit = fahrenheit,
-            onDoubleTap = onClockDoubleTap,
-            onLongPress = onClockLongPress,
-        )
-
-        }
-        val appList: @Composable () -> Unit = {
-        if (sections.isEmpty() && favorites.isEmpty()) {
-            Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                Text("No apps found", color = MaterialTheme.colorScheme.onSurfaceVariant)
-            }
-        } else {
-            // Only the header stuck to the top needs a ground; the rest sit on the wallpaper.
-            val pinnedHeader by remember(sections, listState, favorites.isEmpty(), favorites.size) {
-                derivedStateOf {
-                    val leading = if (favorites.isEmpty()) 0 else favorites.size + 1
-                    activeLetter(listState.firstVisibleItemIndex, sections, leading)
-                }
-            }
-            LazyColumn(
-                state = listState,
-                contentPadding = androidx.compose.foundation.layout.PaddingValues(bottom = 16.dp),
-                modifier = Modifier.fillMaxSize(),
-            ) {
-                if (favorites.isNotEmpty()) {
-                    item(key = "favorites-header") {
-                        if (!style.favoritesAsStar) {
-                            SectionHeader("Favorites", pinned = false)
-                            return@item
+                val rule = MaterialTheme.colorScheme.outline
+                val field = when (style.searchShape) {
+                    SearchShape.Pill -> Modifier
+                        .clip(CircleShape)
+                        .background(MaterialTheme.colorScheme.surfaceVariant)
+                        .clickable(onClick = onOpenSearch, onClickLabel = "Search apps")
+                        .padding(horizontal = 16.dp)
+                    SearchShape.Box -> Modifier
+                        .border(2.dp, rule, RectangleShape)
+                        .clickable(onClick = onOpenSearch, onClickLabel = "Search apps")
+                        .padding(horizontal = 12.dp)
+                    SearchShape.Underline -> Modifier
+                        .clickable(onClick = onOpenSearch, onClickLabel = "Search apps")
+                        .drawBehind {
+                            val y = size.height - 1.dp.toPx() / 2
+                            drawLine(rule, Offset(0f, y), Offset(size.width, y), strokeWidth = 1.dp.toPx())
                         }
-                        // The same star as the rail, so the two read as one control.
-                        Box(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(start = 20.dp, top = 4.dp, bottom = 4.dp)
-                                .semantics { heading(); contentDescription = "Favourites" },
-                        ) {
-                            Icon(
-                                imageVector = Icons.Filled.Star,
-                                contentDescription = null,
-                                tint = MaterialTheme.colorScheme.primary,
-                                modifier = Modifier.size(18.dp),
-                            )
-                        }
-                    }
-                    itemsIndexed(
-                        favoriteOrder,
-                        key = { _, app -> "fav:${app.key}" },
-                        contentType = { _, _ -> "favorite" },
-                    ) { index, app ->
-                        val lifted = dragKey == app.key
-                        val target = favoriteTarget(dragFrom, dragOffset, dragRowHeight, favoriteOrder.size)
-                        val shift = when {
-                            dragKey == null -> 0f
-                            lifted -> dragOffset
-                            dragFrom < target && index in (dragFrom + 1)..target -> -dragRowHeight
-                            dragFrom > target && index in target until dragFrom -> dragRowHeight
-                            else -> 0f
-                        }
-                        val placeShift by animateFloatAsState(shift, label = "favoriteShift")
-                        FavoriteRow(
-                            app = app,
-                            icon = remember(app.key, iconSizeDp) { iconFor(app) },
-                            iconSizeDp = iconSizeDp,
-                            hasNotification = app.packageName in notifiedPackages,
-                            showHandle = dragKey != null,
-                            dragging = lifted,
-                            offsetPx = if (lifted) dragOffset else placeShift,
-                            onDragStart = { height ->
-                                dragKey = app.key
-                                dragFrom = index
-                                dragOffset = 0f
-                                dragRowHeight = height
-                            },
-                            onDrag = { dy ->
-                                val before = favoriteTarget(dragFrom, dragOffset, dragRowHeight, favoriteOrder.size)
-                                dragOffset += dy
-                                val after = favoriteTarget(dragFrom, dragOffset, dragRowHeight, favoriteOrder.size)
-                                // One tick each time the lifted row claims a new slot.
-                                if (after != before) haptics.performHapticFeedback(HapticFeedbackType.SegmentTick)
-                            },
-                            onDragEnd = {
-                                val to = favoriteTarget(dragFrom, dragOffset, dragRowHeight, favoriteOrder.size)
-                                if (to != dragFrom) {
-                                    haptics.performHapticFeedback(HapticFeedbackType.Confirm)
-                                    favoriteOrder = reorderFavorites(favoriteOrder, dragFrom, to)
-                                    onFavoriteMoved(favoriteOrder.map { it.key })
-                                }
-                                dragKey = null
-                                dragOffset = 0f
-                            },
-                            onClick = { onLaunch(app) },
-                            onLongClick = { onLongPress(app) },
-                            onMoveUp = {
-                                val from = favoriteOrder.indexOfFirst { it.key == app.key }
-                                if (from > 0) {
-                                    favoriteOrder = reorderFavorites(favoriteOrder, from, from - 1)
-                                    onFavoriteMoved(favoriteOrder.map { it.key })
-                                }
-                            },
-                            onMoveDown = {
-                                val from = favoriteOrder.indexOfFirst { it.key == app.key }
-                                if (from in 0 until favoriteOrder.lastIndex) {
-                                    favoriteOrder = reorderFavorites(favoriteOrder, from, from + 1)
-                                    onFavoriteMoved(favoriteOrder.map { it.key })
-                                }
-                            },
-                            // No placement animation while lifted, so slots snap instead of lagging.
-                            modifier = if (dragKey != null) {
-                                Modifier.zIndex(if (lifted) 1f else 0f)
-                            } else {
-                                Modifier.animateItem()
-                            },
-                        )
-                    }
+                        .padding(horizontal = 4.dp)
                 }
-                if (sections.isEmpty()) {
-                    item(key = "empty") {
-                        Box(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(vertical = 48.dp),
-                            contentAlignment = Alignment.Center,
-                        ) {
-                            Text("No apps found", color = MaterialTheme.colorScheme.onSurfaceVariant)
-                        }
-                    }
-                }
-                sections.forEach { section ->
-                    stickyHeader(key = "header-${section.header}") {
-                        SectionHeader(section.header, pinned = section.header == pinnedHeader)
-                    }
-                    items(section.items, key = { it.key }) { entry ->
-                        when (entry) {
-                            is HomeEntry.AppItem -> AppRow(
-                                app = entry.app,
-                                icon = remember(entry.app.key, iconSizeDp) { iconFor(entry.app) },
-                                iconSizeDp = iconSizeDp,
-                                hasNotification = entry.app.packageName in notifiedPackages,
-                                onClick = { onLaunch(entry.app) },
-                                onLongClick = { onLongPress(entry.app) },
-                            )
-                            is HomeEntry.FolderItem -> FolderRow(
-                                folder = entry.folder,
-                                apps = folderContents[entry.folder.id].orEmpty(),
-                                iconFor = iconFor,
-                                onClick = { onFolderOpen(entry.folder) },
-                                onLongClick = { onFolderLongPress(entry.folder) },
-                            )
-                        }
-                    }
-                }
-            }
-        }
-        }
-        val rail: @Composable BoxScope.() -> Unit = {
-        val presentLetters = remember(sections) {
-            sections.mapNotNull { railLetterFor(it.header) }.toSet()
-        }
-        val leadingItems = if (favorites.isEmpty()) 0 else favorites.size + 1
-        if (presentLetters.isNotEmpty()) {
-            val activeHeader by remember(sections, listState, leadingItems) {
-                derivedStateOf {
-                    activeLetter(listState.firstVisibleItemIndex, sections, leadingItems)
-                }
-            }
-            val active = activeHeader?.let(::railLetterFor)
-            AlphabetRail(
-                letters = railLetters,
-                presentLetters = presentLetters,
-                active = active,
-                onFavorites = { scope.launch { listState.animateScrollToItem(0) } },
-                onSelect = { letter ->
-                    jumpTarget(letter, sections, leadingItems)?.let { index ->
-                        scope.launch { listState.animateScrollToItem(index) }
-                    }
-                },
-                modifier = Modifier.align(Alignment.CenterEnd),
-            )
-        }
-        }
-
-        if (twoPane) {
-            Row(Modifier.fillMaxSize()) {
-                Column(
+                Row(
                     modifier = Modifier
                         .weight(1f)
-                        .fillMaxHeight()
-                        .verticalScroll(rememberScrollState())
-                        .padding(top = 24.dp),
+                        .heightIn(min = 48.dp)
+                        .then(field),
+                    verticalAlignment = Alignment.CenterVertically,
                 ) {
-                    header()
-                    widgets()
+                    Icon(
+                        imageVector = Icons.Default.Search,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.size(if (style.searchShape == SearchShape.Pill) 24.dp else 20.dp),
+                    )
+                    Spacer(Modifier.width(12.dp))
+                    Text(
+                        text = "Search apps",
+                        style = style.search,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
                 }
-                // The gutter between the two pages, where the hinge runs.
-                Box(
-                    Modifier
-                        .fillMaxHeight()
-                        .padding(vertical = 32.dp)
-                        .width(1.dp)
-                        .background(MaterialTheme.colorScheme.outlineVariant),
+                Spacer(Modifier.width(8.dp))
+                IconButton(onClick = onOpenSettings) {
+                    Icon(
+                        if (style.searchShape == SearchShape.Pill && style.railStrip) {
+                            Icons.Filled.Settings
+                        } else {
+                            Icons.Outlined.Settings
+                        },
+                        contentDescription = "Settings",
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+            }
+
+            }
+            val banner: @Composable () -> Unit = {
+            if (showBanner) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp, vertical = 4.dp)
+                        .clip(RoundedCornerShape(12.dp))
+                        .background(MaterialTheme.colorScheme.surfaceVariant)
+                        .padding(start = 16.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Text(
+                        text = "Set Cascade as your default launcher",
+                        style = MaterialTheme.typography.bodyMedium,
+                        modifier = Modifier.weight(1f),
+                    )
+                    TextButton(onClick = onSetDefault) { Text("Set") }
+                    TextButton(onClick = onDismissBanner) { Text("Dismiss") }
+                }
+            }
+
+            }
+            val header: @Composable () -> Unit = {
+            ClockHeader(
+                modifier = Modifier.homeSwipeArea(swipe),
+                weather = weather,
+                showWeather = showWeather,
+                showVerse = showVerse,
+                fahrenheit = fahrenheit,
+                onDoubleTap = onClockDoubleTap,
+                onLongPress = onClockLongPress,
+            )
+
+            }
+            val appList: @Composable () -> Unit = {
+            if (sections.isEmpty() && favorites.isEmpty()) {
+                Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    Text("No apps found", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                }
+            } else {
+                // Only the header stuck to the top needs a ground; the rest sit on the wallpaper.
+                val pinnedHeader by remember(sections, listState, favorites.isEmpty(), favorites.size) {
+                    derivedStateOf {
+                        val leading = if (favorites.isEmpty()) 0 else favorites.size + 1
+                        activeLetter(listState.firstVisibleItemIndex, sections, leading)
+                    }
+                }
+                LazyColumn(
+                    state = listState,
+                    contentPadding = androidx.compose.foundation.layout.PaddingValues(bottom = 16.dp),
+                    modifier = Modifier.fillMaxSize(),
+                ) {
+                    if (favorites.isNotEmpty()) {
+                        item(key = "favorites-header") {
+                            if (!style.favoritesAsStar) {
+                                SectionHeader("Favorites", pinned = false)
+                                return@item
+                            }
+                            // The same star as the rail, so the two read as one control.
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(start = 20.dp, top = 4.dp, bottom = 4.dp)
+                                    .semantics { heading(); contentDescription = "Favourites" },
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Filled.Star,
+                                    contentDescription = null,
+                                    tint = MaterialTheme.colorScheme.primary,
+                                    modifier = Modifier.size(18.dp),
+                                )
+                            }
+                        }
+                        itemsIndexed(
+                            favoriteOrder,
+                            key = { _, app -> "fav:${app.key}" },
+                            contentType = { _, _ -> "favorite" },
+                        ) { index, app ->
+                            val lifted = dragKey == app.key
+                            val target = favoriteTarget(dragFrom, dragOffset, dragRowHeight, favoriteOrder.size)
+                            val shift = when {
+                                dragKey == null -> 0f
+                                lifted -> dragOffset
+                                dragFrom < target && index in (dragFrom + 1)..target -> -dragRowHeight
+                                dragFrom > target && index in target until dragFrom -> dragRowHeight
+                                else -> 0f
+                            }
+                            val placeShift by animateFloatAsState(shift, label = "favoriteShift")
+                            FavoriteRow(
+                                app = app,
+                                icon = remember(app.key, iconSizeDp) { iconFor(app) },
+                                iconSizeDp = iconSizeDp,
+                                hasNotification = app.packageName in notifiedPackages,
+                                showHandle = dragKey != null,
+                                dragging = lifted,
+                                offsetPx = if (lifted) dragOffset else placeShift,
+                                onDragStart = { height ->
+                                    dragKey = app.key
+                                    dragFrom = index
+                                    dragOffset = 0f
+                                    dragRowHeight = height
+                                },
+                                onDrag = { dy ->
+                                    val before = favoriteTarget(dragFrom, dragOffset, dragRowHeight, favoriteOrder.size)
+                                    dragOffset += dy
+                                    val after = favoriteTarget(dragFrom, dragOffset, dragRowHeight, favoriteOrder.size)
+                                    // One tick each time the lifted row claims a new slot.
+                                    if (after != before) haptics.performHapticFeedback(HapticFeedbackType.SegmentTick)
+                                },
+                                onDragEnd = {
+                                    val to = favoriteTarget(dragFrom, dragOffset, dragRowHeight, favoriteOrder.size)
+                                    if (to != dragFrom) {
+                                        haptics.performHapticFeedback(HapticFeedbackType.Confirm)
+                                        favoriteOrder = reorderFavorites(favoriteOrder, dragFrom, to)
+                                        onFavoriteMoved(favoriteOrder.map { it.key })
+                                    }
+                                    dragKey = null
+                                    dragOffset = 0f
+                                },
+                                onClick = { onLaunch(app) },
+                                onLongClick = { onLongPress(app) },
+                                onMoveUp = {
+                                    val from = favoriteOrder.indexOfFirst { it.key == app.key }
+                                    if (from > 0) {
+                                        favoriteOrder = reorderFavorites(favoriteOrder, from, from - 1)
+                                        onFavoriteMoved(favoriteOrder.map { it.key })
+                                    }
+                                },
+                                onMoveDown = {
+                                    val from = favoriteOrder.indexOfFirst { it.key == app.key }
+                                    if (from in 0 until favoriteOrder.lastIndex) {
+                                        favoriteOrder = reorderFavorites(favoriteOrder, from, from + 1)
+                                        onFavoriteMoved(favoriteOrder.map { it.key })
+                                    }
+                                },
+                                // No placement animation while lifted, so slots snap instead of lagging.
+                                modifier = if (dragKey != null) {
+                                    Modifier.zIndex(if (lifted) 1f else 0f)
+                                } else {
+                                    Modifier.animateItem()
+                                },
+                            )
+                        }
+                    }
+                    if (sections.isEmpty()) {
+                        item(key = "empty") {
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(vertical = 48.dp),
+                                contentAlignment = Alignment.Center,
+                            ) {
+                                Text("No apps found", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            }
+                        }
+                    }
+                    sections.forEach { section ->
+                        stickyHeader(key = "header-${section.header}") {
+                            SectionHeader(section.header, pinned = section.header == pinnedHeader)
+                        }
+                        items(section.items, key = { it.key }) { entry ->
+                            when (entry) {
+                                is HomeEntry.AppItem -> AppRow(
+                                    app = entry.app,
+                                    icon = remember(entry.app.key, iconSizeDp) { iconFor(entry.app) },
+                                    iconSizeDp = iconSizeDp,
+                                    hasNotification = entry.app.packageName in notifiedPackages,
+                                    onClick = { onLaunch(entry.app) },
+                                    onLongClick = { onLongPress(entry.app) },
+                                )
+                                is HomeEntry.FolderItem -> FolderRow(
+                                    folder = entry.folder,
+                                    apps = folderContents[entry.folder.id].orEmpty(),
+                                    iconFor = iconFor,
+                                    onClick = { onFolderOpen(entry.folder) },
+                                    onLongClick = { onFolderLongPress(entry.folder) },
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+            }
+            val rail: @Composable BoxScope.() -> Unit = {
+            val presentLetters = remember(sections) {
+                sections.mapNotNull { railLetterFor(it.header) }.toSet()
+            }
+            val leadingItems = if (favorites.isEmpty()) 0 else favorites.size + 1
+            if (presentLetters.isNotEmpty()) {
+                val activeHeader by remember(sections, listState, leadingItems) {
+                    derivedStateOf {
+                        activeLetter(listState.firstVisibleItemIndex, sections, leadingItems)
+                    }
+                }
+                val active = activeHeader?.let(::railLetterFor)
+                AlphabetRail(
+                    letters = railLetters,
+                    presentLetters = presentLetters,
+                    active = active,
+                    onFavorites = { scope.launch { listState.animateScrollToItem(0) } },
+                    onSelect = { letter ->
+                        jumpTarget(letter, sections, leadingItems)?.let { index ->
+                            scope.launch { listState.animateScrollToItem(index) }
+                        }
+                    },
+                    modifier = Modifier.align(Alignment.CenterEnd),
                 )
-                Box(Modifier.weight(1f).fillMaxHeight()) {
+            }
+            }
+
+            if (twoPane) {
+                Row(Modifier.fillMaxSize()) {
+                    Column(
+                        modifier = Modifier
+                            .weight(1f)
+                            .fillMaxHeight()
+                            .verticalScroll(rememberScrollState())
+                            .padding(top = 24.dp),
+                    ) {
+                        header()
+                        widgets()
+                    }
+                    // The gutter between the two pages, where the hinge runs.
+                    Box(
+                        Modifier
+                            .fillMaxHeight()
+                            .padding(vertical = 32.dp)
+                            .width(1.dp)
+                            .background(MaterialTheme.colorScheme.outlineVariant),
+                    )
+                    Box(Modifier.weight(1f).fillMaxHeight()) {
+                        Column(Modifier.fillMaxSize().padding(end = 44.dp)) {
+                            searchBar()
+                            banner()
+                            appList()
+                        }
+                        rail()
+                    }
+                }
+            } else {
+                Box(
+                    modifier = Modifier
+                        .widthIn(max = 640.dp)
+                        .fillMaxSize()
+                        .align(Alignment.TopCenter),
+                ) {
                     Column(Modifier.fillMaxSize().padding(end = 44.dp)) {
                         searchBar()
                         banner()
+                        header()
+                        widgets()
                         appList()
                     }
                     rail()
                 }
-            }
-        } else {
-            Box(
-                modifier = Modifier
-                    .widthIn(max = 640.dp)
-                    .fillMaxSize()
-                    .align(Alignment.TopCenter),
-            ) {
-                Column(Modifier.fillMaxSize().padding(end = 44.dp)) {
-                    searchBar()
-                    banner()
-                    header()
-                    widgets()
-                    appList()
-                }
-                rail()
             }
         }
     }

@@ -333,6 +333,14 @@ class Prefs(context: Context) {
         prefs.edit().putString(KEY_SWIPE_UP, action.name).apply()
     }
 
+    private val _animateGround = MutableStateFlow(prefs.getBoolean(KEY_ANIMATE_GROUND, true))
+    val animateGround: StateFlow<Boolean> = _animateGround.asStateFlow()
+
+    fun setAnimateGround(enabled: Boolean) {
+        _animateGround.value = enabled
+        prefs.edit().putBoolean(KEY_ANIMATE_GROUND, enabled).apply()
+    }
+
     private val _haptics = MutableStateFlow(prefs.getBoolean(KEY_HAPTICS, true))
     val haptics: StateFlow<Boolean> = _haptics.asStateFlow()
 
@@ -389,6 +397,7 @@ class Prefs(context: Context) {
         private const val KEY_SHOW_VERSE = "show_verse"
         private const val KEY_THEMED_ICONS = "themed_icons"
         private const val KEY_HAPTICS = "haptics"
+        private const val KEY_ANIMATE_GROUND = "animate_ground"
         private const val KEY_USAGE = "usage"
         private const val KEY_SWIPE_DOWN = "swipe_down"
         private const val KEY_SWIPE_UP = "swipe_up"

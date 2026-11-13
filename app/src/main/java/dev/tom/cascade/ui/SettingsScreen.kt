@@ -104,6 +104,8 @@ fun SettingsScreen(
     onThemedIcons: (Boolean) -> Unit,
     haptics: Boolean,
     onHaptics: (Boolean) -> Unit,
+    animateGround: Boolean,
+    onAnimateGround: (Boolean) -> Unit,
     swipeDown: SwipeAction,
     onSwipeDown: (SwipeAction) -> Unit,
     swipeUp: SwipeAction,
@@ -309,6 +311,20 @@ fun SettingsScreen(
                     )
                 }
                 HapticSwitch(checked = haptics, onCheckedChange = onHaptics)
+            }
+            Row(
+                modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Column(Modifier.weight(1f)) {
+                    Text("Animated backgrounds")
+                    Text(
+                        "Outrun, Phosphor and Riso move gently. Off with the system's Remove animations too",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+                HapticSwitch(checked = animateGround, onCheckedChange = onAnimateGround)
             }
 
             HorizontalDivider(Modifier.padding(vertical = 16.dp))

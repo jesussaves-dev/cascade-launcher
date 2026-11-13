@@ -233,6 +233,7 @@ class HomeActivity : ComponentActivity() {
             val iconPx = (iconSizeDp * density).toInt()
             val themedIcons by prefs.themedIcons.collectAsStateWithLifecycle()
             val hapticsOn by prefs.haptics.collectAsStateWithLifecycle()
+            val animateGround by prefs.animateGround.collectAsStateWithLifecycle()
             val usage by prefs.usage.collectAsStateWithLifecycle()
             val swipeDown by prefs.swipeDown.collectAsStateWithLifecycle()
             val swipeUp by prefs.swipeUp.collectAsStateWithLifecycle()
@@ -392,6 +393,8 @@ class HomeActivity : ComponentActivity() {
                             onThemedIcons = prefs::setThemedIcons,
                             haptics = hapticsOn,
                             onHaptics = prefs::setHaptics,
+                            animateGround = animateGround,
+                            onAnimateGround = prefs::setAnimateGround,
                             swipeDown = swipeDown,
                             onSwipeDown = prefs::setSwipeDown,
                             swipeUp = swipeUp,
@@ -494,6 +497,7 @@ class HomeActivity : ComponentActivity() {
                             },
                             onSwipeDown = swipeHandler(swipeDown) { searching = true },
                             onSwipeUp = swipeHandler(swipeUp) { searching = true },
+                            animateGround = animateGround,
                         )
                     }
                 }
