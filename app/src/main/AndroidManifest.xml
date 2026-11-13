@@ -3,6 +3,8 @@
     <uses-permission android:name="android.permission.REQUEST_DELETE_PACKAGES" />
     <uses-permission android:name="android.permission.READ_CONTACTS" />
     <uses-permission android:name="android.permission.INTERNET" />
+    <!-- Swipe down on home pulls down the notification shade. -->
+    <uses-permission android:name="android.permission.EXPAND_STATUS_BAR" />
 
     <!-- LauncherApps results are package-visibility filtered on Android 11+. -->
     <queries>

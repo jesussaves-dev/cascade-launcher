@@ -16,6 +16,9 @@ import java.util.UUID
 enum class ThemeMode { SYSTEM, LIGHT, DARK }
 
 /** The home screen's look. Original is Cascade 1.0; Index is the book-index redesign. */
+/** What a long swipe on home does. */
+enum class SwipeAction { NOTHING, NOTIFICATIONS, SEARCH }
+
 enum class HomeTheme { ORIGINAL, INDEX, RUBRIC, PIXEL, TIDE, NIGHT_WATCH, PAPER, OUTRUN, PHOSPHOR, POSTER, BLUEPRINT, RISO }
 
 class Prefs(context: Context) {
@@ -288,6 +291,24 @@ class Prefs(context: Context) {
         prefs.edit().putString(KEY_USAGE, UsageCodec.encode(next, now)).apply()
     }
 
+    private val _swipeDown = MutableStateFlow(readSwipe(KEY_SWIPE_DOWN, SwipeAction.NOTIFICATIONS))
+    val swipeDown: StateFlow<SwipeAction> = _swipeDown.asStateFlow()
+    private val _swipeUp = MutableStateFlow(readSwipe(KEY_SWIPE_UP, SwipeAction.SEARCH))
+    val swipeUp: StateFlow<SwipeAction> = _swipeUp.asStateFlow()
+
+    private fun readSwipe(key: String, default: SwipeAction): SwipeAction =
+        prefs.getString(key, null)?.let { runCatching { SwipeAction.valueOf(it) }.getOrNull() } ?: default
+
+    fun setSwipeDown(action: SwipeAction) {
+        _swipeDown.value = action
+        prefs.edit().putString(KEY_SWIPE_DOWN, action.name).apply()
+    }
+
+    fun setSwipeUp(action: SwipeAction) {
+        _swipeUp.value = action
+        prefs.edit().putString(KEY_SWIPE_UP, action.name).apply()
+    }
+
     private val _haptics = MutableStateFlow(prefs.getBoolean(KEY_HAPTICS, true))
     val haptics: StateFlow<Boolean> = _haptics.asStateFlow()
 
@@ -345,6 +366,8 @@ class Prefs(context: Context) {
         private const val KEY_THEMED_ICONS = "themed_icons"
         private const val KEY_HAPTICS = "haptics"
         private const val KEY_USAGE = "usage"
+        private const val KEY_SWIPE_DOWN = "swipe_down"
+        private const val KEY_SWIPE_UP = "swipe_up"
         private const val KEY_NIGHT_THEME = "night_theme"
     }
 }

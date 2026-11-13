@@ -14,6 +14,8 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalHapticFeedback
 import dev.tom.cascade.ui.theme.LocalHomeStyle
 import dev.tom.cascade.ui.theme.groundPattern
@@ -113,6 +115,9 @@ fun HomeScreen(
     fahrenheit: Boolean = false,
     listState: LazyListState = rememberLazyListState(),
     onClockDoubleTap: () -> Unit = {},
+    /** Null leaves that swipe alone. */
+    onSwipeDown: (() -> Unit)? = null,
+    onSwipeUp: (() -> Unit)? = null,
     onClockLongPress: () -> Unit = {},
 ) {
     val scope = rememberCoroutineScope()
@@ -123,6 +128,14 @@ fun HomeScreen(
     var dragOffset by remember { mutableFloatStateOf(0f) }
     var dragRowHeight by remember { mutableFloatStateOf(0f) }
     val haptics = LocalHapticFeedback.current
+    val swipeThreshold = with(LocalDensity.current) { 72.dp.toPx() }
+    val swipe = remember(swipeThreshold) { HomeSwipe(swipeThreshold) }
+    swipe.onSwipeDown = onSwipeDown?.let { action ->
+        { haptics.performHapticFeedback(HapticFeedbackType.GestureThresholdActivate); action() }
+    }
+    swipe.onSwipeUp = onSwipeUp?.let { action ->
+        { haptics.performHapticFeedback(HapticFeedbackType.GestureThresholdActivate); action() }
+    }
     val style = LocalHomeStyle.current
     val ground = style.ground
     BoxWithConstraints(
@@ -136,6 +149,7 @@ fun HomeScreen(
                 },
             )
             .groundPattern(style.pattern)
+            .nestedScroll(swipe)
             .windowInsetsPadding(WindowInsets.safeDrawing),
     ) {
         // An unfolded Fold (or a phone on its side) gets two pages: clock left, apps right.
@@ -225,6 +239,7 @@ fun HomeScreen(
         }
         val header: @Composable () -> Unit = {
         ClockHeader(
+            modifier = Modifier.homeSwipeArea(swipe),
             weather = weather,
             showWeather = showWeather,
             showVerse = showVerse,

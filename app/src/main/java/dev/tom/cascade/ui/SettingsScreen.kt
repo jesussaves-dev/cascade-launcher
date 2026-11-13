@@ -34,6 +34,9 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Slider
+import androidx.compose.material3.SegmentedButton
+import androidx.compose.material3.SegmentedButtonDefaults
+import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -51,6 +54,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.graphics.ImageBitmap
 import dev.tom.cascade.data.HomeTheme
+import dev.tom.cascade.data.SwipeAction
 import dev.tom.cascade.data.ThemeMode
 import dev.tom.cascade.model.AppEntry
 import dev.tom.cascade.iconpack.IconPackInfo
@@ -100,6 +104,10 @@ fun SettingsScreen(
     onThemedIcons: (Boolean) -> Unit,
     haptics: Boolean,
     onHaptics: (Boolean) -> Unit,
+    swipeDown: SwipeAction,
+    onSwipeDown: (SwipeAction) -> Unit,
+    swipeUp: SwipeAction,
+    onSwipeUp: (SwipeAction) -> Unit,
     nightTheme: HomeTheme?,
     onNightTheme: (HomeTheme?) -> Unit,
     onUnhide: (String) -> Unit,
@@ -364,6 +372,18 @@ fun SettingsScreen(
                     Text(if (adminActive) "Turn off" else "Turn on")
                 }
             }
+            SwipeChoice(
+                title = "Swipe down",
+                hint = "On the clock, or past the top of the list",
+                selected = swipeDown,
+                onSelect = onSwipeDown,
+            )
+            SwipeChoice(
+                title = "Swipe up",
+                hint = "On the clock, or past the end of the list",
+                selected = swipeUp,
+                onSelect = onSwipeUp,
+            )
 
             HorizontalDivider(Modifier.padding(vertical = 16.dp))
             SectionTitle("Default launcher")
@@ -625,6 +645,40 @@ private fun PackChoice(
         Spacer(Modifier.width(12.dp))
         Text(label, modifier = Modifier.weight(1f))
         RadioButton(selected = selected, onClick = onClick)
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun SwipeChoice(
+    title: String,
+    hint: String,
+    selected: SwipeAction,
+    onSelect: (SwipeAction) -> Unit,
+) {
+    val options = listOf(
+        SwipeAction.NOTHING to "Nothing",
+        SwipeAction.NOTIFICATIONS to "Notifications",
+        SwipeAction.SEARCH to "Search",
+    )
+    val feedback = LocalHapticFeedback.current
+    Column(Modifier.fillMaxWidth().padding(vertical = 8.dp)) {
+        Text(title)
+        Text(hint, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        SingleChoiceSegmentedButtonRow(Modifier.fillMaxWidth().padding(top = 8.dp)) {
+            options.forEachIndexed { index, (action, label) ->
+                SegmentedButton(
+                    selected = selected == action,
+                    onClick = {
+                        if (selected != action) feedback.performHapticFeedback(HapticFeedbackType.SegmentTick)
+                        onSelect(action)
+                    },
+                    shape = SegmentedButtonDefaults.itemShape(index, options.size),
+                ) {
+                    Text(label, maxLines = 1)
+                }
+            }
+        }
     }
 }
 

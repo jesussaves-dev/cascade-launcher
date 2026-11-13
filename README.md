@@ -64,11 +64,11 @@ Unfold the phone and Cascade opens like a book: the clock, verse and widgets on 
 | **List** | A–Z apps with sticky letter headers, a `#` bucket and a wave alphabet rail. Letters with no apps are dimmed. |
 | **Favourites** | Long-press an app to pin it, drag to reorder, no limit. The star on the rail jumps back to them. |
 | **Folders** | Pop-up folders with a 2×2 preview, created from the long-press sheet. |
-| **Search** | Apps, optional contacts, and a "search the web" row. |
+| **Search** | Apps, optional contacts, and a "search the web" row. Matches initials ("gm" finds Google Maps) and forgives a typo, and puts the apps you use most first. |
 | **Notifications** | Dots on apps and a live notification list in the long-press sheet. |
 | **Icons** | ADW icon packs, per-app icon overrides, and a letter tile when an icon is missing. Icon size is adjustable. On Android 13+, themed icons redraw apps' monochrome icons in the theme's colours. |
 | **Header** | A large clock, optional weather and a daily KJV verse. System widgets sit under it. |
-| **Gestures** | Double-tap the clock to lock the screen (optional device admin). Long-press it to change the wallpaper. |
+| **Gestures** | Double-tap the clock to lock the screen (optional device admin). Long-press it to change the wallpaper. Swipe down for notifications and up for search, on the clock or past either end of the list; both are configurable. |
 | **Housekeeping** | Hide apps, open app info and uninstall from the long-press sheet. |
 
 ## Install

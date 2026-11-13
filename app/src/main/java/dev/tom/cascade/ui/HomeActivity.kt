@@ -41,6 +41,7 @@ import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import dev.tom.cascade.CascadeApp
 import dev.tom.cascade.data.ContactsRepository
+import dev.tom.cascade.data.SwipeAction
 import dev.tom.cascade.data.ThemeMode
 import dev.tom.cascade.data.WeatherRepository
 import dev.tom.cascade.iconpack.overrideDrawable
@@ -48,6 +49,7 @@ import dev.tom.cascade.model.AppEntry
 import dev.tom.cascade.model.Folder
 import dev.tom.cascade.notifications.NotificationStore
 import dev.tom.cascade.ui.theme.CascadeTheme
+import dev.tom.cascade.util.expandNotificationShade
 import dev.tom.cascade.util.favoriteApps
 import dev.tom.cascade.util.folderApps
 import dev.tom.cascade.util.isDefaultLauncher
@@ -174,6 +176,8 @@ class HomeActivity : ComponentActivity() {
             val themedIcons by prefs.themedIcons.collectAsStateWithLifecycle()
             val hapticsOn by prefs.haptics.collectAsStateWithLifecycle()
             val usage by prefs.usage.collectAsStateWithLifecycle()
+            val swipeDown by prefs.swipeDown.collectAsStateWithLifecycle()
+            val swipeUp by prefs.swipeUp.collectAsStateWithLifecycle()
             // Plate and ink as ARGB, or null when icons keep their own colours.
             val iconForTint: (AppEntry, Pair<Int, Int>?) -> androidx.compose.ui.graphics.ImageBitmap? = { app, tint ->
                 val override = overrideDrawable(iconOverrides, app.key, activeIconPack)
@@ -330,6 +334,10 @@ class HomeActivity : ComponentActivity() {
                             onThemedIcons = prefs::setThemedIcons,
                             haptics = hapticsOn,
                             onHaptics = prefs::setHaptics,
+                            swipeDown = swipeDown,
+                            onSwipeDown = prefs::setSwipeDown,
+                            swipeUp = swipeUp,
+                            onSwipeUp = prefs::setSwipeUp,
                             nightTheme = nightTheme,
                             onNightTheme = prefs::setNightTheme,
                             onUnhide = prefs::unhide,
@@ -422,6 +430,8 @@ class HomeActivity : ComponentActivity() {
                                     ).show()
                                 }
                             },
+                            onSwipeDown = swipeHandler(swipeDown) { searching = true },
+                            onSwipeUp = swipeHandler(swipeUp) { searching = true },
                         )
                     }
                 }
@@ -645,6 +655,19 @@ class HomeActivity : ComponentActivity() {
         } catch (_: ActivityNotFoundException) {
             (application as CascadeApp).apps.refresh()
             Toast.makeText(this, "${app.label} is not installed", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    /** The home action for a swipe, or null when it is set to do nothing. */
+    private fun swipeHandler(action: SwipeAction, openSearch: () -> Unit): (() -> Unit)? = when (action) {
+        SwipeAction.NOTHING -> null
+        SwipeAction.SEARCH -> openSearch
+        SwipeAction.NOTIFICATIONS -> {
+            {
+                if (!expandNotificationShade(this)) {
+                    Toast.makeText(this, "This phone won't let apps open the notification shade", Toast.LENGTH_SHORT).show()
+                }
+            }
         }
     }
 
