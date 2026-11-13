@@ -79,7 +79,10 @@ fun AlphabetRail(
             modifier = Modifier
                 .fillMaxWidth()
                 .height(32.dp)
-                .clickable(onClick = onFavorites)
+                .clickable {
+                    haptic.performHapticFeedback(HapticFeedbackType.VirtualKey)
+                    onFavorites()
+                }
                 .semantics { contentDescription = "Favorites" },
             contentAlignment = Alignment.Center,
         ) {
@@ -106,7 +109,7 @@ fun AlphabetRail(
                             .coerceIn(0, letters.lastIndex)
                         if (index != fingerIndex) {
                             fingerIndex = index
-                            haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                            haptic.performHapticFeedback(HapticFeedbackType.SegmentTick)
                             onSelect(letters[index])
                         }
                     }

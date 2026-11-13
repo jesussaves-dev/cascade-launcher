@@ -104,7 +104,7 @@ fun SearchOverlay(
                             iconSizeDp = iconSizeDp,
                             hasNotification = false,
                             onClick = { onLaunch(app) },
-                            onLongClick = {},
+                            onLongClick = null,
                         )
                     }
                     if (contactResults.isNotEmpty()) {

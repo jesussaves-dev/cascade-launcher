@@ -20,6 +20,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.semantics.CustomAccessibilityAction
 import androidx.compose.ui.semantics.customActions
 import androidx.compose.ui.semantics.semantics
@@ -58,6 +60,7 @@ fun ClockHeader(
     val context = LocalContext.current
     val doubleTap by rememberUpdatedState(onDoubleTap)
     val longPress by rememberUpdatedState(onLongPress)
+    val haptics = LocalHapticFeedback.current
     var now by remember { mutableLongStateOf(System.currentTimeMillis()) }
     LaunchedEffect(Unit) {
         while (true) {
@@ -86,8 +89,14 @@ fun ClockHeader(
             }
             .pointerInput(Unit) {
                 detectTapGestures(
-                    onDoubleTap = { onDoubleTap() },
-                    onLongPress = { onLongPress() },
+                    onDoubleTap = {
+                        haptics.performHapticFeedback(HapticFeedbackType.Confirm)
+                        doubleTap()
+                    },
+                    onLongPress = {
+                        haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                        longPress()
+                    },
                 )
             }
             .padding(start = 20.dp, end = 20.dp, top = if (compact) 4.dp else 8.dp, bottom = if (compact) 8.dp else 20.dp),

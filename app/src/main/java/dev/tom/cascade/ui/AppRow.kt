@@ -19,6 +19,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -34,14 +36,26 @@ fun AppRow(
     iconSizeDp: Int,
     hasNotification: Boolean,
     onClick: () -> Unit,
-    onLongClick: () -> Unit,
+    onLongClick: (() -> Unit)?,
     modifier: Modifier = Modifier,
     interactive: Boolean = true,
 ) {
+    val haptics = LocalHapticFeedback.current
     Row(
         modifier = modifier
             .fillMaxWidth()
-            .then(if (interactive) Modifier.combinedClickable(onClick = onClick, onLongClick = onLongClick) else Modifier)
+            .then(
+                if (interactive) {
+                    Modifier.combinedClickable(
+                        onClick = onClick,
+                        onLongClick = onLongClick?.let { longClick ->
+                            { haptics.performHapticFeedback(HapticFeedbackType.LongPress); longClick() }
+                        },
+                    )
+                } else {
+                    Modifier
+                },
+            )
             .padding(horizontal = 20.dp, vertical = LocalHomeStyle.current.rowPadding),
         verticalAlignment = Alignment.CenterVertically,
     ) {

@@ -275,6 +275,14 @@ class Prefs(context: Context) {
     private val _themedIcons = MutableStateFlow(prefs.getBoolean(KEY_THEMED_ICONS, false))
     val themedIcons: StateFlow<Boolean> = _themedIcons.asStateFlow()
 
+    private val _haptics = MutableStateFlow(prefs.getBoolean(KEY_HAPTICS, true))
+    val haptics: StateFlow<Boolean> = _haptics.asStateFlow()
+
+    fun setHaptics(enabled: Boolean) {
+        _haptics.value = enabled
+        prefs.edit().putBoolean(KEY_HAPTICS, enabled).apply()
+    }
+
     /** The theme to switch to at night, or null to keep one theme all day. */
     private val _nightTheme = MutableStateFlow(
         prefs.getString(KEY_NIGHT_THEME, null)
@@ -322,6 +330,7 @@ class Prefs(context: Context) {
         private const val KEY_WEATHER_CACHE = "weather_cache"
         private const val KEY_SHOW_VERSE = "show_verse"
         private const val KEY_THEMED_ICONS = "themed_icons"
+        private const val KEY_HAPTICS = "haptics"
         private const val KEY_NIGHT_THEME = "night_theme"
     }
 }

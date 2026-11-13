@@ -23,6 +23,8 @@ import androidx.compose.ui.Modifier
 import dev.tom.cascade.ui.theme.LocalHomeStyle
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import dev.tom.cascade.model.AppEntry
@@ -37,10 +39,14 @@ fun FolderRow(
     onClick: () -> Unit,
     onLongClick: () -> Unit,
 ) {
+    val haptics = LocalHapticFeedback.current
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .combinedClickable(onClick = onClick, onLongClick = onLongClick)
+            .combinedClickable(
+                onClick = onClick,
+                onLongClick = { haptics.performHapticFeedback(HapticFeedbackType.LongPress); onLongClick() },
+            )
             .padding(horizontal = 20.dp, vertical = LocalHomeStyle.current.rowPadding),
         verticalAlignment = Alignment.CenterVertically,
     ) {

@@ -13,6 +13,8 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalHapticFeedback
 import dev.tom.cascade.ui.theme.LocalHomeStyle
 import dev.tom.cascade.ui.theme.groundPattern
 import dev.tom.cascade.ui.theme.SearchShape
@@ -120,6 +122,7 @@ fun HomeScreen(
     var dragFrom by remember { mutableIntStateOf(0) }
     var dragOffset by remember { mutableFloatStateOf(0f) }
     var dragRowHeight by remember { mutableFloatStateOf(0f) }
+    val haptics = LocalHapticFeedback.current
     val style = LocalHomeStyle.current
     val ground = style.ground
     BoxWithConstraints(
@@ -299,10 +302,17 @@ fun HomeScreen(
                                 dragOffset = 0f
                                 dragRowHeight = height
                             },
-                            onDrag = { dy -> dragOffset += dy },
+                            onDrag = { dy ->
+                                val before = favoriteTarget(dragFrom, dragOffset, dragRowHeight, favoriteOrder.size)
+                                dragOffset += dy
+                                val after = favoriteTarget(dragFrom, dragOffset, dragRowHeight, favoriteOrder.size)
+                                // One tick each time the lifted row claims a new slot.
+                                if (after != before) haptics.performHapticFeedback(HapticFeedbackType.SegmentTick)
+                            },
                             onDragEnd = {
                                 val to = favoriteTarget(dragFrom, dragOffset, dragRowHeight, favoriteOrder.size)
                                 if (to != dragFrom) {
+                                    haptics.performHapticFeedback(HapticFeedbackType.Confirm)
                                     favoriteOrder = reorderFavorites(favoriteOrder, dragFrom, to)
                                     onFavoriteMoved(favoriteOrder.map { it.key })
                                 }

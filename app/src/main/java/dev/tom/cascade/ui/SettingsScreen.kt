@@ -58,6 +58,8 @@ import dev.tom.cascade.model.Place
 import dev.tom.cascade.ui.theme.accentChoices
 import dev.tom.cascade.ui.theme.fixedMode
 import dev.tom.cascade.ui.theme.style
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalHapticFeedback
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -96,6 +98,8 @@ fun SettingsScreen(
     onIconSize: (Int) -> Unit,
     themedIcons: Boolean,
     onThemedIcons: (Boolean) -> Unit,
+    haptics: Boolean,
+    onHaptics: (Boolean) -> Unit,
     nightTheme: HomeTheme?,
     onNightTheme: (HomeTheme?) -> Unit,
     onUnhide: (String) -> Unit,
@@ -128,15 +132,20 @@ fun SettingsScreen(
             SectionTitle("Appearance")
 
             Text("Theme", style = MaterialTheme.typography.bodyLarge)
+            val feedback = LocalHapticFeedback.current
+            val pickTheme = { option: HomeTheme ->
+                if (option != homeTheme) feedback.performHapticFeedback(HapticFeedbackType.SegmentTick)
+                onHomeTheme(option)
+            }
             HomeTheme.entries.forEach { option ->
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .clickable { onHomeTheme(option) }
+                        .clickable { pickTheme(option) }
                         .padding(vertical = 4.dp),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
-                    RadioButton(selected = homeTheme == option, onClick = { onHomeTheme(option) })
+                    RadioButton(selected = homeTheme == option, onClick = { pickTheme(option) })
                     Column {
                         // Each name is set in its own theme's app-label face.
                         Text(option.title, style = option.style().appLabel)
@@ -274,8 +283,22 @@ fun SettingsScreen(
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
                     }
-                    Switch(checked = themedIcons, onCheckedChange = onThemedIcons)
+                    HapticSwitch(checked = themedIcons, onCheckedChange = onThemedIcons)
                 }
+            }
+            Row(
+                modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Column(Modifier.weight(1f)) {
+                    Text("Haptic feedback")
+                    Text(
+                        "Ticks on the alphabet rail, long presses and reordering",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+                HapticSwitch(checked = haptics, onCheckedChange = onHaptics)
             }
 
             HorizontalDivider(Modifier.padding(vertical = 16.dp))
@@ -292,7 +315,7 @@ fun SettingsScreen(
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 }
-                Switch(
+                HapticSwitch(
                     checked = showWeather && place != null,
                     onCheckedChange = onShowWeather,
                     enabled = place != null,
@@ -320,7 +343,7 @@ fun SettingsScreen(
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 }
-                Switch(checked = showVerse, onCheckedChange = onShowVerse)
+                HapticSwitch(checked = showVerse, onCheckedChange = onShowVerse)
             }
 
             HorizontalDivider(Modifier.padding(vertical = 16.dp))
@@ -370,7 +393,7 @@ fun SettingsScreen(
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 }
-                Switch(
+                HapticSwitch(
                     checked = showPreviews && notificationsEnabled,
                     onCheckedChange = onShowPreviews,
                     enabled = notificationsEnabled,
@@ -412,7 +435,7 @@ fun SettingsScreen(
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 }
-                Switch(checked = searchContacts, onCheckedChange = onSearchContacts)
+                HapticSwitch(checked = searchContacts, onCheckedChange = onSearchContacts)
             }
 
             HorizontalDivider(Modifier.padding(vertical = 16.dp))

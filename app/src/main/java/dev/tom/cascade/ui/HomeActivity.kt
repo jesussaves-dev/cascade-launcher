@@ -32,7 +32,9 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.graphics.toArgb
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleEventEffect
@@ -170,6 +172,7 @@ class HomeActivity : ComponentActivity() {
             val density = LocalDensity.current.density
             val iconPx = (iconSizeDp * density).toInt()
             val themedIcons by prefs.themedIcons.collectAsStateWithLifecycle()
+            val hapticsOn by prefs.haptics.collectAsStateWithLifecycle()
             // Plate and ink as ARGB, or null when icons keep their own colours.
             val iconForTint: (AppEntry, Pair<Int, Int>?) -> androidx.compose.ui.graphics.ImageBitmap? = { app, tint ->
                 val override = overrideDrawable(iconOverrides, app.key, activeIconPack)
@@ -267,6 +270,9 @@ class HomeActivity : ComponentActivity() {
                     null
                 }
                 val iconFor: (AppEntry) -> androidx.compose.ui.graphics.ImageBitmap? = { iconForTint(it, iconTint) }
+                // Off swaps in a no-op, so every call site respects the setting without checking it.
+                val haptics = if (hapticsOn) LocalHapticFeedback.current else NoHaptics
+                CompositionLocalProvider(LocalHapticFeedback provides haptics) {
                 key(activeIconPack, packVersion, iconOverrides, iconTint) {
                 when {
                     showSettings -> {
@@ -321,6 +327,8 @@ class HomeActivity : ComponentActivity() {
                             onIconSize = prefs::setIconSize,
                             themedIcons = themedIcons,
                             onThemedIcons = prefs::setThemedIcons,
+                            haptics = hapticsOn,
+                            onHaptics = prefs::setHaptics,
                             nightTheme = nightTheme,
                             onNightTheme = prefs::setNightTheme,
                             onUnhide = prefs::unhide,
@@ -573,6 +581,7 @@ class HomeActivity : ComponentActivity() {
                         },
                         onDismiss = { iconPickerFor = null },
                     )
+                }
                 }
                 }
             }
